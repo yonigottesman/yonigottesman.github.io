@@ -20,17 +20,18 @@
 
 title: Yoni Gottesman
 email: yonigo10@gmail.com
-description: >- # this means to ignore newlines until "baseurl:"
-  Im supposed to Write an awesome description here.
+description: Random stuff I've learned
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
-twitter_username: yonigottesman
+# twitter_username: yonigottesman
 github_username:  yonigottesman
 
 # Build settings
 theme: minima
 plugins:
   - jekyll-feed
+  - jemoji
+show_excerpts: true
 
 # Exclude from processing.
 # The following items will not be processed, by default.
