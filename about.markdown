@@ -4,6 +4,6 @@ title: About
 permalink: /about/
 ---
 
-![Personal Photo]({{ "/assets/yonigo_pic.jpg" | absolute_url }})
+![yonigo]({{ "/assets/yonigo_pic.jpg" | absolute_url }}){:height="50%" width="50%"}
 
 I know that I know nothing.
