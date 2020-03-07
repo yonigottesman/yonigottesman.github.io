@@ -96,7 +96,9 @@ After reading and chewing the data I'm left with an event input matrix like befo
 |  3 |                0 |              9379 |          9746 |             9753 |                 9765 |        4 |
 
 
-The numbers in the matrix represent the feature value index. I could transform each row to a hot-encoded vector like in the paper but im using pytorch Embeddings layer that expects a list of indices.
+The numbers in the matrix represent the feature value index. I could transform each row to a hot-encoded vector like in the paper but im using pytorch Embeddings layer that expects a list of indices. A hot encoded version of movielens input data would look like this:  
+
+![movielens_input]({{ "/assets/movielens_input.jpg" | absolute_url }})
 
 Next step is to split the data to train and validation and create pytorch dataloader:
 ```python
@@ -165,7 +167,7 @@ Understand Embeddings
 After the model finished training, each feature value has its own embedding and hopyfully the model managed to capture some semantics just like word2vec does for words.
 I expect similar feature values, for example similar movies or users with similar taste, to be close to one another when measuring distance with cosine similarity.  
 
-Ill visualize embeddings of movies in these different genres: Children\'s, Horror and Documentary on a 2D plot using t-SNE for dimensionality reduction:
+To examine embeddings similarity, Ill visualize embeddings of movies in these different genres: Children\'s, Horror and Documentary on a 2D plot using t-SNE for dimensionality reduction:
 
 
 ```python
@@ -180,7 +182,29 @@ ax = sns.scatterplot(x="x", y="y", hue='genres',data=movies_subset)
 
 ![movie embeddings]({{ "/assets/movie_emb.jpeg" | absolute_url }})
 
-Cool! the model managed to seperate genres without me telling it the real genre!
+Cool! the model managed to seperate genres without me telling it the real genre!  
+Another way to look at this is to pick a movie, print the 10 most closest movies to it and validate the closest movies are similar to the one we picked.
+Ill pick Toy Story and check:
+```python
+toy_story_index=torch.tensor(6040,device=device)
+toy_story_embeddings = model.embeddings(toy_story_index)
+cosine_similarities = torch.tensor([F.cosine_similarity(toy_story_embeddings,i,dim=0) 
+                                    for i in movie_embeddings])
+movies.iloc[cosine_similarities.argsort(descending=True).detach().numpy()]['title'].values[:10]
+```
+```
+['Toy Story (1995)',
+ 'Toy Story 2 (1999)',
+ "Bug's Life, A (1998)",
+ 'Beauty and the Beast (1991)',
+ 'Aladdin (1992)',
+ 'Little Mermaid, The (1989)',
+ 'Babe (1995)',
+ 'Lion King, The (1994)',
+ 'Tarzan (1999)',
+ 'Back to the Future (1985)']
+```
+
 
 Make Movie Recomendations
 ----------------
@@ -217,11 +241,11 @@ Lets recommend top 10 movies to a male aged 18 to 25 unknown user with these ste
 
 And for the code:
 ```python
-man_embeddings = model.embeddings(torch.tensor(9754,device=device))
-age18_25_embeddings = model.embeddings(torch.tensor(9747,device=device))
-metadata_embeddings = man_embeddings+age18_25_embeddings
-ranknings = movie_bias.squeeze()+(metadata_embeddings*movie_embeddings).sum(1)
-movies.iloc[ranknings.argsort(descending=True)]['title'].values[:10]
+man_embedding = model.embeddings(torch.tensor(9754,device=device))
+age18_25_embedding = model.embeddings(torch.tensor(9747,device=device))
+metadata_embedding = man_embedding+age18_25_embedding
+rankings = movie_biases.squeeze()+(metadata_embedding*movie_embeddings).sum(1)
+movies.iloc[rankings.argsort(descending=True)]['title'].values[:10]
 ``` 
 
 ```
@@ -231,32 +255,32 @@ movies.iloc[ranknings.argsort(descending=True)]['title'].values[:10]
  'Godfather, The (1972)',
  'Life Is Beautiful (La Vita è bella) (1997)',
  'Braveheart (1995)',
+ 'Sanjuro (1962)',
  'Monty Python and the Holy Grail (1974)',
- "Schindler's List (1993)",
- 'GoodFellas (1990)',
- 'Star Wars: Episode IV - A New Hope (1977)']
+ 'Star Wars: Episode IV - A New Hope (1977)',
+ 'Star Wars: Episode V - The Empire Strikes Back (1980)']
 ``` 
 
-And now lets recommend top 10 movies to a female over 56 unknown user:
+And now lets recommend top 10 movies to a female between 50 and 56 unknown user:
 ```python
-woman_embeddings = model.embeddings(torch.tensor(9753,device=device))
-over56_embeddings = model.embeddings(torch.tensor(9752,device=device))
-metadata_embeddings = woman_embeddings+over56_embeddings
-ranknings = movie_bias.squeeze()+(metadata_embeddings*movie_embeddings).sum(1)
-movies.iloc[ranknings.argsort(descending=True)]['title'].values[:10]
+woman_embedding = model.embeddings(torch.tensor(9753,device=device))
+age50_56_embedding = model.embeddings(torch.tensor(9751,device=device))
+metadata_embedding = woman_embedding+age50_56_embedding
+rankings = movie_biases.squeeze()+(metadata_embedding*movie_embeddings).sum(1)
+movies.iloc[rankings.argsort(descending=True)]['title'].values[:10]
 ``` 
 
 ```
-['Gone with the Wind (1939)',
-'To Kill a Mockingbird (1962)',
-"Schindler's List (1993)",
-'Some Like It Hot (1959)',
-'African Queen, The (1951)',
-'Color Purple, The (1985)',
-'Grapes of Wrath, The (1940)',
-'Room with a View, A (1986)',
-'Casablanca (1942)',
-'Wizard of Oz, The (1939)']
+['To Kill a Mockingbird (1962)',
+ 'Wrong Trousers, The (1993)',
+ 'African Queen, The (1951)',
+ 'Close Shave, A (1995)',
+ "Schindler's List (1993)",
+ 'Man for All Seasons, A (1966)',
+ 'Some Like It Hot (1959)',
+ 'General, The (1927)',
+ 'Sound of Music, The (1965)',
+ 'Wizard of Oz, The (1939)']
 ``` 
 
 Seems about right ¯\\_(ツ)_/¯  
@@ -264,8 +288,9 @@ Seems about right ¯\\_(ツ)_/¯
 Serve Recommender System with Elasticsearch
 ----------------
 The last step in building my recommender is to move from my jupyter code to a realltime serving system.
-I will use elasticsearch to store all my feature value embeddings $$v_i$$ and biases $$w_i$$.
-This is how the recommendation flow will go:
+I'll use [elasticsearch](https://www.elastic.co/), an open source distributd search engine based on lucene. Lately elasticsearch introduced a new document field type called "dense_vector", which I will use to store my feature value embeddings, and use for ranking using build in vector operations. Each feature value will be represented as a document that stores embedding $$v_i$$ and bias $$w_i$$.
+
+After indexing all the feature value documents this is how the recommendation flow will go:
 1. User enters my system (netflix website for example)
 2. Query elasticsearch for user metadata vectors and add them to create $$v_{metadata}$$
 3. Query elasticsearch again, this time sending $$v_{metadata}$$ and ranking movies by $$ rank(movie_i):=w_{movie_i}+<v_{metadata},movie_i>$$
@@ -315,12 +340,13 @@ def generate_movie_docs():
         yield {
             '_index': 'recsys',
             '_id': f'movie_{movie["movieId"]}',
-            'doc': {'embedding':movie['embedding'].tolist(),
+            '_source': {'embedding':movie['embedding'],
                     'bias':movie['bias'],
-                    'feater_type':'movie',
+                    'feature_type':'movie',
                     'title':movie['title']
                    }
         }
+helpers.bulk(es,generate_movie_docs())
 es = Elasticsearch()
 helpers.bulk(es,generate_movie_docs())
 ```

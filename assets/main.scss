@@ -22,6 +22,11 @@
  $dt-yellow: #f1fa8c;
  $dt-green-light: rgb(172, 229, 145);
 
+.math-container {
+  overflow-x: auto;
+  display: block; /* or use a <div> instead of a span */
+}
+ 
 // .post img {
 //         display: block;
 //         // border:1px solid #021a40;
@@ -29,7 +34,7 @@
 //         margin-left: auto;
 //         margin-right: auto;
 // }
-
+ 
 .post figcaption {
   text-align: center;
   font-size: .8rem;
@@ -390,7 +395,7 @@ table {
   display: block !important;
   overflow-x: auto;
   white-space: nowrap;
-  font-size: 75%;
+//  font-size: 75%;
   border:none;
   th{
     text-align: center! important;
