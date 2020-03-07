@@ -12,9 +12,9 @@ categories: recsys pytorch elasticsearch
 </script>
 
 
-In this post I'll build and serve a production grade movie recommender from scratch!  :open_mouth:  
-I'll use the movielens 1M dataset to train a Factorization Machine model implemented with pytroch. After learning the vector representation of movies and user metadata I'll use elasticsearch to serve the model and recommend movies to new users.  
-The full code is here: [github](https://github.com/yonigottesman/recommendation_playground/blob/master/fatorization_machine-1M.ipynb), [colab](https://colab.research.google.com/drive/1z21Hb-CORQ0JbH7cPSwULcY-JhhlaeQe)
+In this post I'll build and serve a movie recommender from scratch!  :open_mouth:  
+I'll use the movielens 1M dataset to train a Factorization Machine model implemented with pytroch. After learning the vector representation of movies and user metadata I'll use elasticsearch, a production grade search engine, to serve the model and recommend movies to new users.  
+The full code is here: [github](https://github.com/yonigottesman/recommendation_playground/blob/master/fm_movies.ipynb), [colab](https://colab.research.google.com/drive/1I5S2vhcfumg1mlfNhH5MIDE4jbWZTcFW)
 
 
 
@@ -75,7 +75,7 @@ There are a few things to point out here:
    $$ 
    \sum_{i = 1}^n\sum_{j = i + 1}^{n}<v_i, v_j>x_ix_j =  \sum_{f=1}^k((\sum_{i=1}^{n}v_{i,f}x_i)^2-(\sum_{i=1}^{n}v_{i,f}^2x_i^2))
    $$  
-   This means the pairwise interaction are done in $$O(kn)$$ and not $$O(kn^2)$$  
+   This means the pairwise interactions are done in $$O(kn)$$ and not $$O(kn^2)$$  
    
    * I'm using an Embeddings layer, so the input will be a tensor of offsets and not a hot-encoded vector (like in the image). So $$x_i$$ from before can be $$[0,1,0,0,1,1,0]$$ but the input to the model will be $$[1,4,5]$$  
    
@@ -182,7 +182,7 @@ ax = sns.scatterplot(x="x", y="y", hue='genres',data=movies_subset)
 
 ![movie embeddings]({{ "/assets/movie_emb.jpeg" | absolute_url }})
 
-Cool! the model managed to seperate genres without me telling it the real genre!  
+Cool! The model managed to seperate genres without me telling it the real genre!  
 Another way to look at this is to pick a movie, print the 10 most closest movies to it and validate the closest movies are similar to the one we picked.
 Ill pick Toy Story and check:
 ```python
@@ -204,7 +204,7 @@ movies.iloc[cosine_similarities.argsort(descending=True).detach().numpy()]['titl
  'Tarzan (1999)',
  'Back to the Future (1985)']
 ```
-
+Nice! The model placed kids animations close to each other.
 
 Make Movie Recomendations
 ----------------
@@ -229,7 +229,7 @@ $$
 score(movie_i):= w_{movie_i} + <(v_{9754}+v_{9747}),v_{movie_i}>
 $$
 
-To summerize, when a user with metadata x,y,z arrives and needs a recommendation, I will sum the metadata $$ v_{metadata}=v_x+v_y+v_z$$ and rank all the movies by cacluating:
+To summerize, when a user with metadata x,y,z arrives and needs a recommendation, I will sum the metadata embeddings $$ v_{metadata}=v_x+v_y+v_z$$ and rank all the movies by cacluating:
 
 $$ rank(movie_i):=w_{movie_i}+<v_{metadata},movie_i>$$
 
@@ -346,13 +346,12 @@ def generate_movie_docs():
                     'title':movie['title']
                    }
         }
-helpers.bulk(es,generate_movie_docs())
 es = Elasticsearch()
 helpers.bulk(es,generate_movie_docs())
 ```
 
 Ill do the same for users, age vectors, gender vectors and occupation. The only difference between them is 'feature_type' which I use later to filtering.  
-Ill still need to store somewhere the mapping between feature value to index (for example female index is 9753), these indices where chosen when I created the datasets. I can store them anywhere and load them to memory when the systems starts.  
+Ill still need to store somewhere the mapping between feature value to index (for example female index is 9753), these indices were chosen when I created the datasets. I can store them anywhere and load them to memory when the systems starts.  
 
 Now everything is set, we can start making predictions according to the flow:
 1. The same unknown user from before - male between 18-25 enters my website!
@@ -401,7 +400,7 @@ search_body = {
 ```
 
 * The filter part is for only calculating movie documents.
-* The "source" script is the ranking method" on each movie document with the v_metadata from stage 2.
+* The "source" script is the ranking method on each movie document with the v_metadata from stage 2.
 
 And the results...
 ```
@@ -418,3 +417,13 @@ And the results...
 ```
 
 Awsome! we are out from a jupyter playground to a real world, production quality serving system!
+
+
+<script src="https://utteranc.es/client.js"
+        repo="yonigottesman/yonigottesman.github.io"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
