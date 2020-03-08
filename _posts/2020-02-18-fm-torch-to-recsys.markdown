@@ -67,13 +67,12 @@ class FMModel(nn.Module):
 ```
 
 There are a few things to point out here:
-   * I'm implementing lamma 3.1 from the paper that prooves that 
+   * I'm implementing lamma 3.1 from the paper that prooves that the pairwise interactions can be done in $$O(kn)$$ and not $$O(kn^2)$$  like this:
    <div class="math-scroll">
    $$ 
    \sum_{i = 1}^n\sum_{j = i + 1}^{n}<v_i, v_j>x_ix_j =  \sum_{f=1}^k((\sum_{i=1}^{n}v_{i,f}x_i)^2-(\sum_{i=1}^{n}v_{i,f}^2x_i^2))
    $$  
    </div>
-   This means the pairwise interactions are done in $$O(kn)$$ and not $$O(kn^2)$$  
    
    * I'm using an Embeddings layer, so the input will be a tensor of offsets and not a hot-encoded vector (like in the image). So $$x_i$$ from before can be $$[0,1,0,0,1,1,0]$$ but the input to the model will be $$[1,4,5]$$  
    
