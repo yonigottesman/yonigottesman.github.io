@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Movie Recommender from Pytorch to Elasticsearch"
-excerpt: "Build and serve a movie recommender from scratch using movielens, pytorch, factorization machines and elasticsearch "
+excerpt: "Train and serve a movie recommender from scratch using movielens, pytorch, factorization machines and elasticsearch "
 date:   2020-02-18 06:48:38 +0200
 categories: recsys pytorch elasticsearch
 ---
@@ -12,7 +12,7 @@ categories: recsys pytorch elasticsearch
 </script>
 
 
-In this post I'll build and serve a movie recommender from scratch!  :open_mouth:  
+In this post I'll train and serve a movie recommender from scratch!  :open_mouth:  
 I'll use the movielens 1M dataset to train a Factorization Machine model implemented with pytroch. After learning the vector representation of movies and user metadata I'll use elasticsearch, a production grade search engine, to serve the model and recommend movies to new users.  
 The full code is here: [github](https://github.com/yonigottesman/recommendation_playground/blob/master/fm_movies.ipynb), [colab](https://colab.research.google.com/drive/1I5S2vhcfumg1mlfNhH5MIDE4jbWZTcFW)
 
@@ -288,7 +288,7 @@ Seems about right ¯\\_(ツ)_/¯
 Serve Recommender System with Elasticsearch
 ----------------
 The last step in building my recommender is to move from my jupyter code to a realltime serving system.
-I'll use [elasticsearch](https://www.elastic.co/), an open source distributd search engine based on lucene. Lately elasticsearch introduced a new document field type called "dense_vector", which I will use to store my feature value embeddings, and use for ranking using build in vector operations. Each feature value will be represented as a document that stores embedding $$v_i$$ and bias $$w_i$$.
+I'll use [elasticsearch](https://www.elastic.co/), an open source distributd search engine based on lucene. Lately elasticsearch introduced a new document field type called "dense_vector", which I will use to store my feature value embeddings, and use for ranking using built in vector operations. Each feature value will be represented as a document that stores embedding $$v_i$$ and bias $$w_i$$.
 
 After indexing all the feature value documents this is how the recommendation flow will go:
 1. User enters my system (netflix website for example)
