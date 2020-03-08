@@ -349,7 +349,7 @@ es = Elasticsearch()
 helpers.bulk(es,generate_movie_docs())
 ```
 
-Ill do the same for users, age vectors, gender vectors and occupation. The only difference between them is 'feature_type' which I use later to filtering.  
+Ill do the same for user, age, gender and occupation vectors. The only difference between them is 'feature_type' which I use later for filtering results.  
 Ill still need to store somewhere the mapping between feature value to index (for example female index is 9753), these indices were chosen when I created the datasets. I can store them anywhere and load them to memory when the systems starts.  
 
 Now everything is set, we can start making predictions according to the flow:
