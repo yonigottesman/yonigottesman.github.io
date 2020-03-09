@@ -12,20 +12,20 @@ categories: recsys pytorch elasticsearch
 </script>
 
 In this post I'll train and serve a movie recommender from scratch!  :open_mouth:  
-I'll use the movielens 1M dataset to train a Factorization Machine model implemented with pytroch. After learning the vector representation of movies and user metadata I'll use elasticsearch, a production grade search engine, to serve the model and recommend movies to new users.  
+I'll use the movielens 1M dataset to train a Factorization Machine model implemented with pytorch. After learning the vector representation of movies and user metadata I'll use elasticsearch, a production grade search engine, to serve the model and recommend movies to new users.  
 The full code is here: [github](https://github.com/yonigottesman/recommendation_playground/blob/master/fm_movies.ipynb), [colab](https://colab.research.google.com/drive/1I5S2vhcfumg1mlfNhH5MIDE4jbWZTcFW)
 
 
 
 (A short) Introduction to Factorization Machines
 ----------------------------------------------
-[Factorization Machines](https://www.csie.ntu.edu.tw/~b97053/paper/Rendle2010FM.pdf)  (FM) is a supervized machine learing model that extends traditional matrix factorization by also learning interactions between different feature values of the model. Another advantage of FM is that it solves the cold start problem, we can make predictions based on user metadata (age, gender etc.) even if its a user the system has never seen before.  
+[Factorization Machines](https://www.csie.ntu.edu.tw/~b97053/paper/Rendle2010FM.pdf)  (FM) is a supervised machine learning model that extends traditional matrix factorization by also learning interactions between different feature values of the model. An advantage of FM is that it solves the cold start problem, we can make predictions based on user metadata (age, gender etc.) even if it is a user the system has never seen before.  
 
 The input to the model is a list of events that looks like this:
 
 ![FM feature matrix]({{ "/assets/fm_feature_vector.png" | absolute_url }})
 
-Each row is an event, for example $$ x^{(1)} $$ is the event that user A rated movie TI at time 13 with the value $$y^{(1)}=5$$. The feature values are the different types of columns we have, for example for users we have A, B, C etc. feature values. The number of feature values is the width of a row.  
+Each row is an event, for example $$ x^{(1)} $$ is the event that user A rated movie TI at time 13 with the value $$y^{(1)}=5$$. Each feature value is represented by a column, for example for users we have A, B, C etc. feature values. The width of the row is the number feature values.  
 In this case there is some more metadata like "Last Movie rated", but in our movielens dataset we will add user age, gender and occupation instead.  
 
 
@@ -37,7 +37,7 @@ $$ \hat y(x) := w_0 + \sum_{i = 1}^n w_ix_i + \sum_{i = 1}^n\sum_{j = i + 1}^{n}
 
 </div>
 
-Each feature value (column in the input matrix) will be assiged an embeddings vector $$v_i$$ of size $$k$$ and a bias factor $$w_i$$ that will be learned during the training process. $$\langle v_i,v_j\rangle $$ models the interaction between the $$i$$-th and $$j$$-th feature value. Hopefully the embeddings will capture some interesting semantics and similar movies/users will have similar embeddings.
+Each feature value (column in the input matrix) will be assigned an embeddings vector $$v_i$$ of size $$k$$ and a bias factor $$w_i$$ that will be learned during the training process. $$\langle v_i,v_j\rangle $$ models the interaction between the $$i$$-th and $$j$$-th feature values. Hopefully the embeddings will capture some interesting semantics and similar movies/users will have similar embeddings.
 
 
 Pytorch FM Model
@@ -69,18 +69,18 @@ class FMModel(nn.Module):
 ```
 
 There are a few things to point out here:
-   * I'm implementing lamma 3.1 from the paper that prooves that the pairwise interactions can be done in $$O(kn)$$ and not $$O(kn^2)$$  like this:
+   * I'm implementing lamma 3.1 from the paper that proves that the pairwise interactions can be done in $$O(kn)$$ and not $$O(kn^2)$$  like this:
    <div class="math-scroll">
    $$ 
    \sum_{i = 1}^n\sum_{j = i + 1}^{n}\langle v_i, v_j\rangle x_ix_j =  \sum_{f=1}^k((\sum_{i=1}^{n}v_{i,f}x_i)^2-(\sum_{i=1}^{n}v_{i,f}^2x_i^2))
    $$  
    </div>
    
-   * I'm using an Embeddings layer, so the input will be a tensor of offsets and not a hot-encoded vector (like in the image). So $$x_i$$ from before can be $$[0,1,0,0,1,1,0]$$ but the input to the model will be $$[1,4,5]$$  
+   * I'm using an Embeddings layer, so the input will be a tensor of offsets and not a sparse tensor (like in the image). So $$x_i$$ from before can be $$[0,1,0,0,1,1,0]$$ but the input to the model will be $$[1,4,5]$$  
    
-   * I wrap the result with a sigmoid function to limit $$\hat y(x)$$ to be between 0 and 5.5. This helps the model to learn mutch faster.
+   * I wrap the result with a sigmoid function to limit $$\hat y(x)$$ to be between 0 and 5.5. This helps the model to learn much faster.
    
-   * The embeddings are initialized with a truncated normal function - This is something I've learned from the [fastai](https://github.com/fastai/fastai2/blob/master/fastai2/layers.py#L346) library and improves learning spead alot.
+   * The embeddings are initialized with a truncated normal function - This is something I've learned from the [fastai](https://github.com/fastai/fastai2/blob/master/fastai2/layers.py#L346) library and improves learning speed a lot.
 
 Prepare and Fit Data
 ----------------
@@ -95,7 +95,7 @@ After reading and chewing the data I'm left with an event input matrix like befo
 |  3 |                0 |              9379 |          9746 |             9753 |                 9765 |        4 |
 
 
-The numbers in the matrix represent the feature value index. I could transform each row to a hot-encoded vector like in the paper but im using pytorch Embeddings layer that expects a list of indices. A hot encoded version of movielens input data would look like this:  
+The numbers in the matrix represent the feature value index. I could transform each row to a sparse vector like in the paper but im using pytorch Embeddings layer that expects a list of indices. A hot encoded version of movielens input data would look like this:  
 
 ![movielens_input]({{ "/assets/movielens_input.jpg" | absolute_url }})
 
@@ -138,7 +138,7 @@ def test(iterator, model, criterion):
         train_loss += loss.item()*x.shape[0]
     return train_loss / len(iterator.dataset)
 ```
-Create the model with $$k=120$$ (length of each feature value embedding), and train:
+Create the model with $$k=120$$ (recall $$k$$ is the length of each feature value embedding), and train:
 
 ```python
 model = FMModel(data_x.max()+1, 120).to(device)
@@ -163,10 +163,10 @@ After 10 epochs the rmse is **0.8532**, from what I've seen on various leaderboa
 
 Understand Embeddings
 ----------------
-After the model finished training, each feature value has its own embedding and hopyfully the model managed to capture some semantics just like word2vec does for words.
+After the model finished training, each feature value has its own embedding and hopefully the model managed to capture some semantics just like word2vec does for words.
 I expect similar feature values, for example similar movies or users with similar taste, to be close to one another when measuring distance with cosine similarity.  
 
-To examine embeddings similarity, Ill visualize embeddings of movies in these different genres: Children\'s, Horror and Documentary on a 2D plot using t-SNE for dimensionality reduction:
+To examine embeddings similarity, Ill visualize embeddings of movies in these different genres: Children\'s, Horror and Documentary on a 2D plot using [t-SNE](https://en.wikipedia.org/wiki/T-distributed_stochastic_neighbor_embedding) for dimensionality reduction:
 
 
 ```python
@@ -181,7 +181,7 @@ ax = sns.scatterplot(x="x", y="y", hue='genres',data=movies_subset)
 
 ![movie embeddings]({{ "/assets/movie_emb.jpeg" | absolute_url }})
 
-Cool! The model managed to seperate genres without me telling it the real genre!  
+Cool! The model managed to separate genres without me telling it the real genre!  
 Another way to look at this is to pick a movie, print the 10 most closest movies to it and validate the closest movies are similar to the one we picked.
 Ill pick Toy Story and check:
 ```python
@@ -205,18 +205,18 @@ movies.iloc[cosine_similarities.argsort(descending=True).detach().numpy()]['titl
 ```
 Nice! The model placed kids animations close to each other.
 
-Make Movie Recomendations
+Make Movie Recommendations
 ----------------
-We can now make movie recommendations to users we have seen **and** users we have not seen that we only have some metadata about (age, gender or occupation).
+We can now make movie recommendations to users we have seen in the train data **and** users we have not seen but know their metadata (like age, gender or occupation).
 All we have to do is calculate the FM equations once for each movie and see which movies get the highest predicted rating.  
-For example if we have a new (never seen in train so no userId embedding) male user (male_index=9754) and his age is between 18 and 25 (age18_25_index=9747) we will calculate $$\hat y(x)$$ once for every movie:  
+For example, if we have a new (never seen in train so no userId embedding) male user (male_index=9754) and his age is between 18 and 25 (age18_25_index=9747) we will calculate $$\hat y(x)$$ for each movie:  
 <div class="math-scroll">
 $$ 
 \hat y(9754,9747,movie_i):= w_0 + w_{9747}+ w_{9754} + w_{movie_i}+ \sum_{i = \{9747,9754,movie_i\}}\sum_j \langle v_i, v_j\rangle x_ix_j
 $$
 </div>
-And choose the $$ movie_i$$'s with the highest ratings. **But** the nice thing here is that for recommendation I dont need the rating itself, its enough to know which movies were best without calculating the full equation.
-I can do this by ignoring all the terms in $$ \hat y(x)$$ that are the same for each movie calculation, and then I'm left with:
+And choose the $$ movie_i$$'s with the highest ratings. **But** the nice thing here is that for recommendation I don't need the rating itself, it's enough to rank movies without calculating the full equation.
+I can do this by ignoring all the terms in $$ \hat y(x)$$ that are the same for all movies, and then I'm left with:
 <div class="math-scroll">
 $$
 score(movie_i):= w_{movie_i} +\langle v_{movie_i},v_{9754}\rangle  + \langle v_{movie_i},v_{9747}\rangle
@@ -228,12 +228,12 @@ $$
 score(movie_i):= w_{movie_i} + \langle (v_{9754}+v_{9747}),v_{movie_i}\rangle 
 $$
 </div>
-To summerize, when a user with metadata x,y,z arrives and needs a recommendation, I will sum the metadata embeddings $$ v_{metadata}=v_x+v_y+v_z$$ and rank all the movies by cacluating:
+To summarize, when a user with metadata x,y,z needs a recommendation, I will sum the metadata embeddings $$ v_{metadata}=v_x+v_y+v_z$$ and rank all the movies by calculating:
 
 $$ rank(movie_i):=w_{movie_i}+\langle v_{metadata},movie_i\rangle $$
 
-Lets recommend top 10 movies to a male aged 18 to 25 unknown user with these steps:
-1. Get "man" embeddigns $$v_{9754}$$
+Lets recommend top 10 movies to a male aged 18 to 25 new user with these steps:
+1. Get "man" embeddings $$v_{9754}$$
 2. Get "age 18 to 25" embeddings $$v_{9747}$$
 3. Calculate $$v_{metadata}=v_{9754} + v_{9747}$$
 4. Calculate rank for each movie and return top 10
@@ -260,7 +260,7 @@ movies.iloc[rankings.argsort(descending=True)]['title'].values[:10]
  'Star Wars: Episode V - The Empire Strikes Back (1980)']
 ``` 
 
-And now lets recommend top 10 movies to a female between 50 and 56 unknown user:
+And now lets recommend top 10 movies to a female between 50 and 56 new user:
 ```python
 woman_embedding = model.embeddings(torch.tensor(9753,device=device))
 age50_56_embedding = model.embeddings(torch.tensor(9751,device=device))
@@ -286,16 +286,16 @@ Seems about right ¯\\_(ツ)_/¯
 
 Serve Recommender System with Elasticsearch
 ----------------
-The last step in building my recommender is to move from my jupyter code to a realltime serving system.
-I'll use [elasticsearch](https://www.elastic.co/), an open source distributd search engine based on lucene. Lately elasticsearch introduced a new document field type called "dense_vector", which I will use to store my feature value embeddings, and use for ranking using built in vector operations. Each feature value will be represented as a document that stores embedding $$v_i$$ and bias $$w_i$$.
+The last step in building my recommender is to move from my jupyter code to a real time serving system.
+I'll use [elasticsearch](https://www.elastic.co/), an open source distributed search engine based on lucene. Lately elasticsearch introduced a new document field type called "dense_vector", which I will use to store my feature value embeddings, and for ranking via the built in vector operations. Each feature value will be represented as a document that stores embedding $$v_i$$ and bias $$w_i$$.
 
-After indexing all the feature value documents this is how the recommendation flow will go:
+After indexing all the feature value documents (see details below) this is how the recommendation flow will go:
 1. User enters my system (netflix website for example)
 2. Query elasticsearch for user metadata vectors and add them to create $$v_{metadata}$$
 3. Query elasticsearch again, this time sending $$v_{metadata}$$ and ranking movies by $$ rank(movie_i)$$
-4. Display user the results
+4. Display the results
 
-First thing is to get elasticseach running, creating an index and indexing all embeddings.
+First thing is to get elasticsearch running, creating an index and indexing all embeddings.
 Lets [quickstart](https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started-install.html) by downloading and running elasticsearch on a single node with default configurations:
 
 ```shell
@@ -350,11 +350,11 @@ helpers.bulk(es,generate_movie_docs())
 ```
 
 Ill do the same for user, age, gender and occupation vectors. The only difference between them is 'feature_type' which I use later for filtering results.  
-Ill still need to store somewhere the mapping between feature value to index (for example female index is 9753), these indices were chosen when I created the datasets. I can store them anywhere and load them to memory when the systems starts.  
+Ill still need to store somewhere the mapping between feature value to index (for example female index is 9753), these indices were chosen when I created the datasets. I can store them anywhere and load them to memory when the system starts.  
 
 Now everything is set, we can start making predictions according to the flow:
-1. The same unknown user from before - male between 18-25 enters my website!
-2. Query elasticsearch for user metadata vectors and add them to create $$v_{metadata}$$
+1. The same new user from before - male between 18-25 enters my website!
+2. Query elasticsearch for user metadata vectors and sum them to create $$v_{metadata}$$
 
 ```python
 metadata = es.mget({"docs":[
@@ -399,7 +399,7 @@ search_body = {
  for hit in es.search(search_body,index='recsys',_source_includes='title')['hits']['hits']]
 ```
 
-* The filter part is for only calculating movie documents.
+* The filter part is only for calculating movie documents.
 * The "source" script is the ranking method on each movie document with the v_metadata from stage 2.
 
 And the results...
@@ -416,8 +416,7 @@ And the results...
  'Star Wars: Episode V - The Empire Strikes Back (1980)']
 ```
 
-Awsome! we are out from a jupyter playground to a real world, production quality serving system!
-
+Awesome! we are out from a jupyter playground to a real world, production quality serving system!
 
 <script src="https://utteranc.es/client.js"
         repo="yonigottesman/yonigottesman.github.io"
