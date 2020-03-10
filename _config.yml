@@ -22,7 +22,7 @@ title: Yoni Gottesman
 email: yonigo10@gmail.com
 description: Random stuff I've learned
 baseurl: "" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site, e.g. http://example.com
+url: "https://yonigottesman.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 # twitter_username: yonigottesman
 github_username:  yonigottesman
 linkedin_username:  yonigottesman
