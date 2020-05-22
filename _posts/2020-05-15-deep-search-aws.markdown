@@ -60,11 +60,12 @@ num_ftrs = model.fc.in_features # output of previous layer
 model.fc = nn.Linear(num_ftrs, 251)
 ```
 
-After about 20 epochs the top3 accuracy is around 0.84, this brings me to the middle of the scoreboard and is good enough for extracting embeddings. State of the art image similarity systems use a triplet loss function and dont train on a classification problem (like me) [2](https://arxiv.org/abs/1404.4661), [3](https://arxiv.org/pdf/1503.03832.pdf). 
+After about 20 epochs the top3 accuracy is around 0.84, this brings me to the middle of the scoreboard and is good enough for extracting embeddings. State of the art image similarity systems use a triplet loss function and dont train on a classification problem. [2](https://arxiv.org/abs/1404.4661), [3](https://arxiv.org/pdf/1503.03832.pdf). 
 
 
 
-
+<!-- The training is done in 2 parts, first freeze the whole network except the last layer, then unfreeze all and train all parameters with smaller learning rate.  All the boilerplate around training (datasets, tranforms, training loop) is in the [notebook](https://github.com/yonigottesman/deepfood/blob/master/notebooks/train_model.ipynb). -->
+<!-- State of the art systems use triplets to learn image similarity (), but for simplicity I chose to just train on a classification problem. More examples of training models for image similarity [here](https://github.com/microsoft/computervision-recipes/tree/master/scenarios/similarity). -->
 
 Exctract Image Embeddings
 ======
@@ -127,7 +128,7 @@ Part II - Deploy Application
 
 Create Index & Upload to S3
 ======
-I create the index from two datasets: [iFood](https://www.kaggle.com/c/ifood-2019-fgvc6/data) wich is the data I trained on, and [Food 101](https://www.kaggle.com/dansbecker/food-101). The id of each image is the filename in this format  \<id\>.jpg. I use [this]() script to downlaod the datasets, put all the images in the same folder and change all the filenames to ids. After I have a folder with all the images i can create a pytorch dataset and iterate through all the images, extracting an embedding and inserting to the annoy index:
+The index of images will be created from two datasets: [iFood](https://www.kaggle.com/c/ifood-2019-fgvc6/data) which is the data I trained on, and [Food 101](https://www.kaggle.com/dansbecker/food-101). The id of each image is the filename in this format  \<id\>.jpg. I use [this]() script to downlaod the datasets, put all the images in the same folder and change all the filenames to ids. After I have a folder with all the images i can create a pytorch dataset and iterate through all the images, extracting an embedding and inserting to the annoy index: 
 ```python
 t = AnnoyIndex(512, 'euclidean')
 for batch in tqdm(dataloader):
@@ -139,23 +140,23 @@ for batch in tqdm(dataloader):
 t.build(5) # 5 trees
 t.save('tree_5.ann')
 ```
-Im building the annoy index with 5 trees, this is a configuration that tradeoffs size of index, speed and accuracy.
-After index is saved I can upload the index and the resnet34 model to s3 later to be read by the web app:
+Im building the annoy index with 5 trees, this is a configuration that tradeoffs size of index, speed and accuracy. The full notebook [here]().  
+After the index is saved I can upload the index and the resnet34 model to s3 later to be read by the web app:
 ```bash
 aws s3 cp --acl public-read model.pt s3://deepfood/
 aws s3 cp --acl public-read tree_5.ann s3://deepfood/
 aws s3 cp --acl public-read index_images  s3://deepfood/ --recursive
 ```
-You will have to install the aws cli and set permissions to write to s3 (More on this later).
+
 
 Web App
 =======
-This is the application that binds everything together, gets user queries, searches nearest neighbors and returns the result. Im using [starlette](https://www.starlette.io/) which is a microframwork based on python asyncio but in this case there is no reason not to use flask which is more popular.
+The application that binds everything together, gets user queries, searches nearest neighbors and returns the result. Im using [starlette](https://www.starlette.io/) which is a microframwork based on python asyncio. (In this case there is no reason not to use flask which is more popular)
 <!-- . asyncio frameworks are better if im planning to do async requests to other services (redis, sql...) but in this case its all cpu bound. The only reason I chose starlette is because I wanted to learn how to use it. You can read about Armin Ronacher thoughts on this [here](https://lucumr.pocoo.org/2020/1/1/async-pressure/) -->
 
 The full code can be found [here](https://github.com/yonigottesman/deepfood/tree/master/deepfood_service) and I will go only over the important parts.  
 
-routes.py contains the endpoints to the application, the important route is '/search' which accepts a POST request containing the image:
+[**routes.py**](https://github.com/yonigottesman/deepfood/blob/master/deepfood_service/app/app/routes.py) contains the endpoints of the application, the important route is '/search' which accepts a POST request containing the image:
 
 ```python
 @app.route('/search',methods=['POST'])
@@ -172,16 +173,21 @@ async def search(request):
     return JSONResponse(result)
 
 ```
-The code extracs the image from the request, computes embeddindgs using our trained resnet, calls annoy search function and returns a list of urls for the frontend to display.
+The code extracts the image from the request, computes embeddings using our trained resnet, calls annoy search function and returns a list of urls for the frontend to display.
+
+[**extractor.py**](https://github.com/yonigottesman/deepfood/blob/master/deepfood_service/app/app/extractor.py) contains the code that initializes the models.
+
+[**index.html**](https://github.com/yonigottesman/deepfood/blob/master/deepfood_service/app/app/templates/index.html) is the front-end html, nothing special here except a little trick to get faster results. Instead of sending the full image (1-3MB) I added a script that resizes the image to our model input size 224*224 before sending to server.  
+
+[Some pictures of the app]
 
 
-index.html is the front-end html, nothing special here except a little trick to get faster results. Instead of sending the full image (1-3MB) I added a script that resizes to our model input size 224*224 so that the image is sent mutch faster.
 
 
 
 Docker
 ===
-Easyest and most standard way of deploying an application is packaging it in a docker container. To do it I need a Dockerfile that is a set of inscructions to build the image.
+Easyest and most standard way of deploying an application is packaging it in a docker image. The set of instrucitons to build the image are written in the Dockerfile:
 
 ```shell
 FROM tiangolo/uvicorn-gunicorn:python3.7
@@ -194,22 +200,22 @@ RUN wget --output-document=app/models/model.pt  https://deepfood.s3-us-west-2.am
 RUN wget --output-document=app/models/index.ann https://deepfood.s3-us-west-2.amazonaws.com/tree_5.ann
 RUN pip install -r requirements.txt 
 ```
-The only interesting operations here are 'RUN wget' that download the models we saved to s3 into the image so that the application can use them once its running. The others lines just copy everything, install requirements and run the application (running code here tiangolo/uvicorn-gunicorn).
-
-to build the image and run it localy:
+The first line inherits the docker file from tiangolo/uvicorn-gunicorn wich takes care of running the server. The rest copy the code into the image, installs requirements and **downloads the models from s3**.  
+to build the image and run the image:
 ```shell
 docker build -t myimage ./
 docker run -d --name mycontainer -p 80:80 myimage
 ```
-application is listening on port 80. and can be accessed in localhost:80.
+application can be accessed at localhost:80
 
 Deploy - AWS Elastic Beanstalk
 =====
-Deploying on Beanstalk is easy peasy once you have a dockerfile. The only thing you need is run the eb-cli tool to init a new application:
+Elastic Beanstalk is an AWS service for deploying web application. It supports docker and expects the Dockerfile to instruct it on how to build and deploy the image. Deploying on Beanstalk is easy peasy once you have a dockerfile and the [eb-cli](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install.html) tool.  
+step 1 - create a new eb application:
 ```shell
 eb init -p docker deepfood
 ```
-Add some configurations to .ebextensions/custom.config so that the instance we get has enough memory and starage space to use our models:
+step 2 - Add some configurations to .ebextensions/custom.config so that the instance we get has enough memory and starage space to use our models:
 ```shell
 aws:autoscaling:launchconfiguration:
   InstanceType: t2.large
@@ -217,13 +223,27 @@ aws:autoscaling:launchconfiguration:
   RootVolumeSize: "16"
 
 ```
-And create a new environment with the application
+step 3 - Creat a new environment with the application
 ```shell
 eb create deepfood-env
 ```
-More info [here](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/single-container-docker.html)
+Thats it! the applicatio is up and running! Go to elasticbeanstalk dashboard to get the link, or just run:
+```shell
+eb open'
+```
+More info can be found in official [doc](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/single-container-docker.html)
 
-Thats it! just run 'eb open' to open a browser with link to your online application!. 
+Thats it! just run ' to open a browser with link to your online application!. 
+
+Summary
+-----
+In this post I deplyed an image retreval system on aws. These were the steps:
+1. Fine tune resnet34 model on food images.
+2. Build Annoy index.
+3. Upload model and index to s3.
+4. Deploy web application with eb-cli.
+
+
 
 
 
