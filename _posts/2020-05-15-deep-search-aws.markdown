@@ -1,8 +1,9 @@
 ---
 layout: post
-title:  "Deepfood - Image Retrieval System in Production"
+title:  "*DRAFT* Deepfood - Image Retrieval System in Production"
 excerpt: "Build and deploy a food image retrieval system with pytorch, annoy, starlette and AWS Elastic Beanstalk"
 date:   2020-05-15 06:48:38 +0200
+hide: true
 <!-- categories: deep-learning transfer-learning annoy-ann aws -->
 ---
 
@@ -29,6 +30,16 @@ workflow
    * Web app finds approximate nearest neighbors of embedding using Annoy
    * Return to client list of nearest images ids
    * Client downloads images from s3
+
+Screenshot
+=========
+The web app has a simple ui, uploading [this](https://en.wikipedia.org/wiki/Pizza#/media/File:Pizza_Margherita_stu_spivack.jpg) image  
+![pizza]({{ "/assets/Pizza_Margherita_stu_spivack.jpg" | absolute_url }}){:height="30%" width="30%"}
+
+
+will have the following output
+
+![pizza output]({{ "/assets/pizza_screenshot.png" | absolute_url }}){:height="100%" width="100%"}
 
 
 Image Similarity
@@ -221,7 +232,6 @@ aws:autoscaling:launchconfiguration:
   InstanceType: t2.large
   RootVolumeType: standard
   RootVolumeSize: "16"
-
 ```
 step 3 - Creat a new environment with the application
 ```shell
@@ -229,11 +239,11 @@ eb create deepfood-env
 ```
 Thats it! the applicatio is up and running! Go to elasticbeanstalk dashboard to get the link, or just run:
 ```shell
-eb open'
+eb open
 ```
 More info can be found in official [doc](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/single-container-docker.html)
 
-Thats it! just run ' to open a browser with link to your online application!. 
+
 
 Summary
 -----
@@ -242,8 +252,6 @@ In this post I deplyed an image retreval system on aws. These were the steps:
 2. Build Annoy index.
 3. Upload model and index to s3.
 4. Deploy web application with eb-cli.
-
-
 
 
 
