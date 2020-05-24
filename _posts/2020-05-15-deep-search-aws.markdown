@@ -139,7 +139,7 @@ Part II - Deploy Application
 
 Create Index & Upload to S3
 ======
-The index of images will be created from two datasets: [iFood](https://www.kaggle.com/c/ifood-2019-fgvc6/data) which is the data I trained on, and [Food 101](https://www.kaggle.com/dansbecker/food-101). The id of each image is the filename in this format  \<id\>.jpg. I use [this]() script to downlaod the datasets, put all the images in the same folder and change all the filenames to ids. After I have a folder with all the images i can create a pytorch dataset and iterate through all the images, extracting an embedding and inserting to the annoy index: 
+The index of images will be created from two datasets: [iFood](https://www.kaggle.com/c/ifood-2019-fgvc6/data) which is the data I trained on, and [Food 101](https://www.kaggle.com/dansbecker/food-101). The id of each image is the filename in this format  \<id\>.jpg. I use [this](https://github.com/yonigottesman/deepfood/blob/master/notebooks/create_index_images.sh) script to downlaod the datasets, put all the images in the same folder and change all the filenames to ids. After I have a folder with all the images i can create a pytorch dataset and iterate through all the images, extracting an embedding and inserting to the annoy index: 
 ```python
 t = AnnoyIndex(512, 'euclidean')
 for batch in tqdm(dataloader):
@@ -189,11 +189,6 @@ The code extracts the image from the request, computes embeddings using our trai
 [**extractor.py**](https://github.com/yonigottesman/deepfood/blob/master/deepfood_service/app/app/extractor.py) contains the code that initializes the models.
 
 [**index.html**](https://github.com/yonigottesman/deepfood/blob/master/deepfood_service/app/app/templates/index.html) is the front-end html, nothing special here except a little trick to get faster results. Instead of sending the full image (1-3MB) I added a script that resizes the image to our model input size 224*224 before sending to server.  
-
-[Some pictures of the app]
-
-
-
 
 
 Docker
