@@ -19,7 +19,7 @@ workflow
 1. Train Models  
    * Train embedding extractor based on resnet34
    * Build Annoy nearest neighbor index
-   * save to s3
+   * Save to s3
 2. Serve web app
    * Create docker image
    * Download annoy index + resnet model from s3 to docker image
@@ -46,7 +46,7 @@ Image Similarity
 ====
 The idea behind an image retrieval system is having each image represented as an N dimensional vector (embedding).
 And just like in word2vec, similar images will be close to one another in this N dimensional space.  
-We need some kind of black box that takes an image and transforms it to an embedding, use this back box and transform our database of images to embeddings, then for every query image just find the closest embeddings from our database and return the images.  
+We need some kind of black box that takes an image and transforms it to an embedding, use this back box to transform our database of images to embeddings, then for every query image just find the closest embeddings from our database and return the images.  
 
 Turns out deep neural networks are great black boxes for extracting embeddings! Each layer in a trained neural net learns to extract different features of an image, lower layers learn features such as "image contains a circle" and deeper layers learn features such as "image contains a dog" [[1](https://arxiv.org/abs/1311.2901)]. To use a trained neural net as a black box I will use pytorch hooks to extract the output of one of the last layers.  
 The distance between two images is computed by: 
@@ -57,10 +57,10 @@ The reason I fine tune and not just use the pre-trained weights is because it wa
 
 Part I - Train Model
 ------
-The full training code is in [this notebook](https://github.com/yonigottesman/deepfood/blob/master/notebooks/train_model.ipynb). Here I'm only going to show the important parts and skip the training loops, dataset creation etc..  
+The full training code containing the dataset creation, training loops etc is in [this notebook](https://github.com/yonigottesman/deepfood/blob/master/notebooks/train_model.ipynb). 
 The dataset I use for fine tuning the model is [iFood](https://www.kaggle.com/c/ifood-2019-fgvc6/data), which contain food images like
 ![ifood]({{- "/assets/food.png" | absolute_url -}}){:height="100%" width="100%"}
-First step is to download the resenet34 pretrained model and replace the last layer with a new one with 251 neurons (outputs) which is the number of classes in the ifood dataset.
+First step is to download the resenet34 pretrained model and replace the last layer with a new one with 251 outputs which is the number of classes in the ifood dataset.
 
 
 ```python
@@ -109,8 +109,8 @@ And thats our black box :white_square_button:.
 
 What are Embeddings
 ===================
-The neural network extracts for each image a 512 dimension vector. Each index represents a feature of the image. These features were learned automatically but we can still try to guess what each feature represents by feeding lots of images through the nework and displaying the images that maximize a specific feature (neuron).  
-First I create a tensor of all the embeddings in my dataset (full code is [here]())
+The neural network extracts for each image a 512 dimension vector. Each index represents a feature of the image. These features were learned automatically but we can still try to guess what each feature represents by feeding lots of images through the nework and displaying the images that maximize a specific feature.  
+First I create a tensor of all the embeddings of images in my dataset (full code is [here]())
 
 ```python
 all_emb=torch.tensor([])
@@ -118,7 +118,7 @@ for i,batch in enumerate(tqdm(dataloader)):
     emb = extractor.get_embeddings(batch['image'].to(device)).detach().cpu()
     all_emb=torch.cat([all_emb,emb],dim=0)
 ```
-Then I choose feature index 10 (out of 512) and display top 10 images with highest value
+Then I choose feature index 10 (out of 512) and display the top 10 images with highest value
 
 ```python
 def display_best_images(feature_index):
@@ -128,7 +128,7 @@ def display_best_images(feature_index):
 display_best_images(10)
 ```
 ![feature_10]({{ "/assets/feature_10.png" | absolute_url }})
-Cool it looks like feature 10 is "image contains lots of stright thin lines". Remember the images dont have to look alike just share this single feature. You should run the code yourself and explore other features the network has learned.
+Looks like feature 10 is "image contains lots of stright thin lines". Remember the images dont have to look alike just share this single trait. 
 
 Nearest Neighbors Search with Annoy
 ======================
@@ -139,7 +139,7 @@ Part II - Deploy Application
 
 Create Index & Upload to S3
 ======
-The index of images will be created from two datasets: [iFood](https://www.kaggle.com/c/ifood-2019-fgvc6/data) which is the data I trained on, and [Food 101](https://www.kaggle.com/dansbecker/food-101). The id of each image is the filename in this format  \<id\>.jpg. I use [this](https://github.com/yonigottesman/deepfood/blob/master/notebooks/create_index_images.sh) script to downlaod the datasets, put all the images in the same folder and change all the filenames to ids. After I have a folder with all the images i can create a pytorch dataset and iterate through all the images, extracting an embedding and inserting to the annoy index: 
+The index of images will be created from two datasets: [iFood](https://www.kaggle.com/c/ifood-2019-fgvc6/data) which is the data I trained on, and [Food 101](https://www.kaggle.com/dansbecker/food-101). The id of each image is the filename in this format  \<id\>.jpg. I use [this](https://github.com/yonigottesman/deepfood/blob/master/notebooks/create_index_images.sh) script to downlaod the datasets, put all the images in the same folder and change all the filenames to ids. To create the Annoy index I iteratre through all the images extract there embedding and add the embedding to Annoy
 ```python
 t = AnnoyIndex(512, 'euclidean')
 for batch in tqdm(dataloader):
@@ -151,8 +151,8 @@ for batch in tqdm(dataloader):
 t.build(5) # 5 trees
 t.save('tree_5.ann')
 ```
-Im building the annoy index with 5 trees, this is a configuration that tradeoffs size of index, speed and accuracy. The full notebook [here]().  
-After the index is saved I can upload the index and the resnet34 model to s3 later to be read by the web app:
+Im building the Annoy index with 5 trees, this is a configuration that tradeoffs size of index, speed and accuracy. The full notebook [here]().  
+Next step is to upload the index, the resnet34 embeddings extractor and all images to s3
 ```bash
 aws s3 cp --acl public-read model.pt s3://deepfood/
 aws s3 cp --acl public-read tree_5.ann s3://deepfood/
@@ -162,12 +162,11 @@ aws s3 cp --acl public-read index_images  s3://deepfood/ --recursive
 
 Web App
 =======
-The application that binds everything together, gets user queries, searches nearest neighbors and returns the result. Im using [starlette](https://www.starlette.io/) which is a microframwork based on python asyncio. (In this case there is no reason not to use flask which is more popular)
-<!-- . asyncio frameworks are better if im planning to do async requests to other services (redis, sql...) but in this case its all cpu bound. The only reason I chose starlette is because I wanted to learn how to use it. You can read about Armin Ronacher thoughts on this [here](https://lucumr.pocoo.org/2020/1/1/async-pressure/) -->
+The application that binds everything together, gets user queries, searches nearest neighbors and returns the result. Im using [starlette](https://www.starlette.io/) which is a microframwork based on python asyncio (In this case there is no reason not to use flask which is more popular).
 
 The full code can be found [here](https://github.com/yonigottesman/deepfood/tree/master/deepfood_service) and I will go only over the important parts.  
 
-[**routes.py**](https://github.com/yonigottesman/deepfood/blob/master/deepfood_service/app/app/routes.py) contains the endpoints of the application, the important route is '/search' which accepts a POST request containing the image:
+[**routes.py**](https://github.com/yonigottesman/deepfood/blob/master/deepfood_service/app/app/routes.py) contains the endpoints of the application, the important route is '/search' which accepts a POST request containing the image
 
 ```python
 @app.route('/search',methods=['POST'])
@@ -184,7 +183,7 @@ async def search(request):
     return JSONResponse(result)
 
 ```
-The code extracts the image from the request, computes embeddings using our trained resnet, calls annoy search function and returns a list of urls for the frontend to display.
+The code extracts the image from the request, computes embeddings using our trained resnet, calls Annoy search function and returns a list of urls for the frontend to display.
 
 [**extractor.py**](https://github.com/yonigottesman/deepfood/blob/master/deepfood_service/app/app/extractor.py) contains the code that initializes the models.
 
@@ -207,7 +206,7 @@ RUN wget --output-document=app/models/index.ann https://deepfood.s3-us-west-2.am
 RUN pip install -r requirements.txt 
 ```
 The first line inherits the docker file from tiangolo/uvicorn-gunicorn wich takes care of running the server. The rest copy the code into the image, installs requirements and **downloads the models from s3**.  
-to build the image and run the image:
+to build and run the image
 ```shell
 docker build -t myimage ./
 docker run -d --name mycontainer -p 80:80 myimage
@@ -216,7 +215,7 @@ application can be accessed at localhost:80
 
 Deploy - AWS Elastic Beanstalk
 =====
-Elastic Beanstalk is an AWS service for deploying web application. It supports docker and expects the Dockerfile to instruct it on how to build and deploy the image. Deploying on Beanstalk is easy peasy once you have a dockerfile and the [eb-cli](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install.html) tool.  
+Elastic Beanstalk is an AWS service for deploying web applications. It supports docker and expects the Dockerfile to instruct it on how to build and deploy the image. Deploying on Beanstalk is easy peasy once you have a dockerfile and the [eb-cli](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install.html) tool.  
 step 1 - create a new eb application:
 ```shell
 eb init -p docker deepfood
@@ -232,7 +231,7 @@ step 3 - Creat a new environment with the application
 ```shell
 eb create deepfood-env
 ```
-Thats it! the applicatio is up and running! Go to elasticbeanstalk dashboard to get the link, or just run:
+Thats it! the application is up and running! Go to elasticbeanstalk dashboard to get the link, or just run
 ```shell
 eb open
 ```
@@ -248,6 +247,7 @@ In this post I deplyed an image retreval system on aws. These were the steps:
 3. Upload model and index to s3.
 4. Deploy web application with eb-cli.
 
+:pizza:
 
 
 <script src="https://utteranc.es/client.js"
