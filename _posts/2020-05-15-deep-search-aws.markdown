@@ -1,14 +1,21 @@
 ---
 layout: post
-title:  "*DRAFT* Deepfood - Image Retrieval System in Production"
+title:  "Deepfood - Image Retrieval System in Production"
 excerpt: "Build and deploy a food image retrieval system with pytorch, annoy, starlette and AWS Elastic Beanstalk"
 date:   2020-05-15 06:48:38 +0200
-hide: true
+hide: false
 <!-- categories: deep-learning transfer-learning annoy-ann aws -->
 ---
 
 In this post I will build and **deploy** a food image retrieval system. I will use pytorch to train a model that extracts image features, Annoy for finding nearest neighbor images for a given query image, starlette for building a web application and AWS Elastic Beanstalk for deploying the app. Lets begin!  
 The full code is here: [github](https://github.com/yonigottesman/deepfood).  
+
+Introduction
+==
+The goal of an image retrieval system is to let a user send a query image and return a list of most similar images to the query. For example with [google reverse image search](https://support.google.com/websearch/answer/1325808?co=GENIE.Platform%3DDesktop&hl=en) you can send an image and get all similar images and their web pages. Amazon also has an option to [search by image](https://www.amazon.com/b?ie=UTF8&node=17387598011), just take a picture of something you see and immediately get a list of items sold by amazon that look the same as your picture.  
+
+Im going to build an application to retrieve **food** images and deploy it as web service.
+
 
 System Architecture 
 ===================
@@ -31,6 +38,8 @@ workflow
    * Return to client list of nearest images ids
    * Client downloads images from s3
 
+
+
 Screenshot
 =========
 The web app has a simple ui, uploading [this](https://en.wikipedia.org/wiki/Pizza#/media/File:Pizza_Margherita_stu_spivack.jpg) image  
@@ -44,12 +53,11 @@ will have the following output
 
 Image Similarity
 ====
-The idea behind an image retrieval system is having each image represented as an N dimensional vector (embedding).
-And just like in word2vec, similar images will be close to one another in this N dimensional space.  
+The idea behind an image retrieval system is having each image represented as an N dimensional vector (embedding). Just like in word2vec, similar images will be close to one another in this N dimensional space.  
 We need some kind of black box that takes an image and transforms it to an embedding, use this black box to transform our database of images to embeddings, then for every query image just find the closest embeddings from our database and return the images.  
 
-Turns out deep neural networks are great black boxes for extracting embeddings! Each layer in a trained neural net learns to extract different features of an image, lower layers learn features such as "image contains a circle" and deeper layers learn features such as "image contains a dog" [[1](https://arxiv.org/abs/1311.2901)]. To use a trained neural net as a black box I will use pytorch hooks to extract the output of one of the last layers.  
-The distance between two images is computed by: 
+Turns out deep neural networks are great black boxes for extracting embeddings! Each layer in a trained neural net learns to extract different features of an image, lower layers learn features such as "image contains a circle" and deeper layers learn features such as "image contains a dog" [[1](https://arxiv.org/abs/1311.2901)]. To use a trained neural net as a black box I use pytorch hooks to extract the output of one of the last layers.  
+The distance between two images is then computed by: 
 ![similarity]({{- "/assets/similarity.svg" | absolute_url -}}){:height="100%" width="100%"}
 I use a pre-trained resnet34 model and fine tune it to my specific domain - food images :hamburger:.
 The reason I fine tune and not just use the pre-trained weights is because it was trained on imagenet with 1000 classes. The features extracted from deep layers could be "is there an eye", "is there a big grey thing", "are there ears" (probably :elephant:), but I need features more specific to food for example "is there a red round thing". Of course we don't know what features the model learns but later I will try to guess.  
@@ -80,15 +88,14 @@ After about 20 epochs the top3 accuracy is around 0.84, this brings me to the mi
 
 Exctract Image Embeddings
 ======
-To extract the embeddings of an image I need to read the values from the last layer of the nn. I use pytorch hooks mechanism to save the last layer (right after avgpool layer). 
-
+To extract the embeddings of an image I use pytorch hooks mechanism to save the layer before the last fully connected layer. 
 ![resnet]({{ "/assets/resnet_emb.png" | absolute_url }})
 
 EmbeddingExtractor class registers a hook to the model on \__init\__. When get_embeddings() is called the image is passed through the network and the embedding will be waiting in self.embeddings
  field.
 
 ```python
-class EmbeddingExtractor:
+class  EmbeddingExtractor:
     def sniff_output(self,model, input, output):
         self.embeddings=output  
     def __init__(self,model):
@@ -110,7 +117,7 @@ And thats our black box :white_square_button:.
 
 What are Embeddings
 ===================
-The neural network extracts for each image a 512 dimension vector. Each index represents a feature of the image. These features were learned automatically but we can still try to guess what each feature represents by feeding lots of images through the nework and displaying the images that maximize a specific feature.  
+The neural network extracts for each image a 512 dimension vector where each index represents a feature of the image. These features were learned automatically but we can still try to guess what each feature represents by feeding lots of images through the nework and displaying the images that maximize a specific feature.  
 
 First I calculate the embeddings for all images in the dataset (full code is [here](https://github.com/yonigottesman/deepfood/blob/master/notebooks/embeddings.ipynb))
 ```python
@@ -142,7 +149,7 @@ Creating the model and index for image search is nice and interesting, but in or
 
 Create Index & Upload to S3
 ======
-The index of images will be created from two datasets: [iFood](https://www.kaggle.com/c/ifood-2019-fgvc6/data) which is the data I trained on, and [Food 101](https://www.kaggle.com/dansbecker/food-101). The id of each image is the filename in this format  \<id\>.jpg. I use [this](https://github.com/yonigottesman/deepfood/blob/master/notebooks/create_index_images.sh) script to downlaod the datasets, put all the images in the same folder and change all the filenames to ids. To create the Annoy index I iteratre through all the images extract there embedding and add the embedding to Annoy
+The index of images will be created from two datasets: [iFood](https://www.kaggle.com/c/ifood-2019-fgvc6/data) which is the data I trained on, and [Food 101](https://www.kaggle.com/dansbecker/food-101). The id of each image is the filename in this format  \<id\>.jpg. I use [this](https://github.com/yonigottesman/deepfood/blob/master/notebooks/create_index_images.sh) script to downlaod the datasets, put all the images in the same folder and change all the filenames to ids. To create the Annoy index I iterate through all the images, extract their embedding and add the embedding to Annoy
 ```python
 t = AnnoyIndex(512, 'euclidean')
 for batch in tqdm(dataloader):
@@ -165,8 +172,8 @@ aws s3 cp --acl public-read index_images  s3://deepfood/ --recursive
 
 Web App
 =======
-The application that binds everything together, gets user queries, searches nearest neighbors and returns the result. Im using [starlette](https://www.starlette.io/) which is a microframwork based on python asyncio (In this case there is no reason not to use flask which is more popular).
-The full code can be found [here](https://github.com/yonigottesman/deepfood/tree/master/deepfood_service) and I will go only over the important parts.  
+The application that binds everything together, gets user queries, searches nearest neighbors and returns the result. I use [starlette](https://www.starlette.io/) which is a microframwork based on python asyncio (In this case there is no reason not to use flask which is more popular).
+The full code can be found [here](https://github.com/yonigottesman/deepfood/tree/master/deepfood_service) and I will go over the important parts.  
 
 [**routes.py**](https://github.com/yonigottesman/deepfood/blob/master/deepfood_service/app/app/routes.py) contains the endpoints of the application, the important route is '/search' which accepts a POST request containing the image
 
@@ -217,12 +224,12 @@ application can be accessed at localhost:80
 
 Deploy - AWS Elastic Beanstalk
 =====
-Elastic Beanstalk is an AWS service for deploying web applications. It supports docker and expects the Dockerfile to instruct it on how to build and deploy the image. Deploying on Beanstalk is easy peasy once you have a dockerfile and the [eb-cli](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install.html) tool.  
+Elastic Beanstalk is an AWS service for deploying web applications. It supports docker and expects the Dockerfile to instruct it on how to build and deploy the image. Deploying on Beanstalk is easy peasy once you have a Dockerfile and the [eb-cli](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install.html) tool.  
 step 1 - create a new eb application:
 ```shell
 eb init -p docker deepfood
 ```
-step 2 - Add some configurations to .ebextensions/custom.config so that the instance we get has enough memory and starage space to use our models:
+step 2 - create configuration file .ebextensions/custom.config so that the instance we get has enough memory and starage space to use our models:
 ```shell
 aws:autoscaling:launchconfiguration:
   InstanceType: t2.large
@@ -246,7 +253,7 @@ Summary
 In this post I deplyed an image retrieval system on aws. These were the steps:
 1. Fine tune resnet34 model on food images.
 2. Build Annoy index.
-3. Upload model and index to s3.
+3. Upload model, index and all images to s3.
 4. Deploy web application with eb-cli.
 
 :pizza:
