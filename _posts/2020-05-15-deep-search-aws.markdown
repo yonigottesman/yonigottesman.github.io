@@ -46,7 +46,7 @@ Image Similarity
 ====
 The idea behind an image retrieval system is having each image represented as an N dimensional vector (embedding).
 And just like in word2vec, similar images will be close to one another in this N dimensional space.  
-We need some kind of black box that takes an image and transforms it to an embedding, use this back box to transform our database of images to embeddings, then for every query image just find the closest embeddings from our database and return the images.  
+We need some kind of black box that takes an image and transforms it to an embedding, use this black box to transform our database of images to embeddings, then for every query image just find the closest embeddings from our database and return the images.  
 
 Turns out deep neural networks are great black boxes for extracting embeddings! Each layer in a trained neural net learns to extract different features of an image, lower layers learn features such as "image contains a circle" and deeper layers learn features such as "image contains a dog" [[1](https://arxiv.org/abs/1311.2901)]. To use a trained neural net as a black box I will use pytorch hooks to extract the output of one of the last layers.  
 The distance between two images is computed by: 
@@ -84,7 +84,7 @@ To extract the embeddings of an image I need to read the values from the last la
 
 ![resnet]({{ "/assets/resnet_emb.png" | absolute_url }})
 
-My EmbeddingExtractor registers a hook to the model on \__init\__. When get_embeddings() is called the image is passed through the network and the embedding will be waiting in self.embeddings
+EmbeddingExtractor class registers a hook to the model on \__init\__. When get_embeddings() is called the image is passed through the network and the embedding will be waiting in self.embeddings
  field.
 
 ```python
@@ -103,6 +103,7 @@ class EmbeddingExtractor:
         with torch.no_grad():
             self.model(input.to(device))
         return self.embeddings.squeeze(-1).squeeze(-1)
+        
 extractor = EmbeddingExtractor(model)
 ```
 And thats our black box :white_square_button:.
@@ -110,8 +111,8 @@ And thats our black box :white_square_button:.
 What are Embeddings
 ===================
 The neural network extracts for each image a 512 dimension vector. Each index represents a feature of the image. These features were learned automatically but we can still try to guess what each feature represents by feeding lots of images through the nework and displaying the images that maximize a specific feature.  
-First I create a tensor of all the embeddings of images in my dataset (full code is [here]())
 
+First I calculate the embeddings for all images in the dataset (full code is [here](https://github.com/yonigottesman/deepfood/blob/master/notebooks/embeddings.ipynb))
 ```python
 all_emb=torch.tensor([])
 for i,batch in enumerate(tqdm(dataloader)):
@@ -128,14 +129,16 @@ def display_best_images(feature_index):
 display_best_images(10)
 ```
 ![feature_10]({{ "/assets/feature_10.png" | absolute_url }})
-Looks like feature 10 is "image contains lots of stright thin lines". Remember the images dont have to look alike just share this single trait. 
+Looks like feature 10 is "image contains lots of stright thin lines". These images dont have to look alike, they just share this single trait. Images that (in human eyes) are similar will share many of these traits and be close to one another in the embedding space.
 
 Nearest Neighbors Search with Annoy
 ======================
-After computing the embeddings for all images I use [Annoy](https://github.com/spotify/annoy) to build an index of all embeddings. Annoy is used to search embeddings similar (euclidean distance) to the query embedding in the index. It returns the approximate nearest neighbor but runs faster than comparing to all embeddings in the index. 
+[Annoy](https://github.com/spotify/annoy) (Approximate Nearest Neighbors Oh Yeah) is a library to search for points in space that are close to a given query point. I build an Annoy index of all my images embeddings and then query the index with a user image embedding to get the approximate nearest images.  
 
 Part II - Deploy Application
 ------
+Creating the model and index for image search is nice and interesting, but in order to use it in a real world application I will deply a service that accepts user images and returns a list of results. The images, model and index will all be stored in an s3 bucket.
+
 
 Create Index & Upload to S3
 ======
@@ -152,7 +155,7 @@ t.build(5) # 5 trees
 t.save('tree_5.ann')
 ```
 Im building the Annoy index with 5 trees, this is a configuration that tradeoffs size of index, speed and accuracy. The full notebook [here]().  
-Next step is to upload the index, the resnet34 embeddings extractor and all images to s3
+Next step is to upload the index, the resnet34 embeddings extractor and all images to s3 using the aws [cli](https://aws.amazon.com/cli/)
 ```bash
 aws s3 cp --acl public-read model.pt s3://deepfood/
 aws s3 cp --acl public-read tree_5.ann s3://deepfood/
@@ -163,7 +166,6 @@ aws s3 cp --acl public-read index_images  s3://deepfood/ --recursive
 Web App
 =======
 The application that binds everything together, gets user queries, searches nearest neighbors and returns the result. Im using [starlette](https://www.starlette.io/) which is a microframwork based on python asyncio (In this case there is no reason not to use flask which is more popular).
-
 The full code can be found [here](https://github.com/yonigottesman/deepfood/tree/master/deepfood_service) and I will go only over the important parts.  
 
 [**routes.py**](https://github.com/yonigottesman/deepfood/blob/master/deepfood_service/app/app/routes.py) contains the endpoints of the application, the important route is '/search' which accepts a POST request containing the image
@@ -192,7 +194,7 @@ The code extracts the image from the request, computes embeddings using our trai
 
 Docker
 ===
-Easyest and most standard way of deploying an application is packaging it in a docker image. The set of instrucitons to build the image are written in the Dockerfile:
+Easiest and most standard way of deploying an application is packaging it in a docker image. The set of instructions to build the image are written in the [Dockerfile](https://github.com/yonigottesman/deepfood/blob/master/deepfood_service/Dockerfile):
 
 ```shell
 FROM tiangolo/uvicorn-gunicorn:python3.7
@@ -205,7 +207,7 @@ RUN wget --output-document=app/models/model.pt  https://deepfood.s3-us-west-2.am
 RUN wget --output-document=app/models/index.ann https://deepfood.s3-us-west-2.amazonaws.com/tree_5.ann
 RUN pip install -r requirements.txt 
 ```
-The first line inherits the docker file from tiangolo/uvicorn-gunicorn wich takes care of running the server. The rest copy the code into the image, installs requirements and **downloads the models from s3**.  
+The first line inherits the docker file from [tiangolo/uvicorn-gunicorn](https://hub.docker.com/r/tiangolo/uvicorn-gunicorn-starlette) wich takes care of running the server. The rest copy the code into the image, installs requirements and **downloads the models from s3**.  
 to build and run the image
 ```shell
 docker build -t myimage ./
@@ -227,7 +229,7 @@ aws:autoscaling:launchconfiguration:
   RootVolumeType: standard
   RootVolumeSize: "16"
 ```
-step 3 - Creat a new environment with the application
+step 3 - Create a new environment with the application
 ```shell
 eb create deepfood-env
 ```
@@ -241,7 +243,7 @@ More info can be found in official [doc](https://docs.aws.amazon.com/elasticbean
 
 Summary
 -----
-In this post I deplyed an image retreval system on aws. These were the steps:
+In this post I deplyed an image retrieval system on aws. These were the steps:
 1. Fine tune resnet34 model on food images.
 2. Build Annoy index.
 3. Upload model and index to s3.
