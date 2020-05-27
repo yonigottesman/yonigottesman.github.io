@@ -191,7 +191,8 @@ cosine_similarities = torch.tensor([F.cosine_similarity(toy_story_embeddings,i,d
                                     for i in movie_embeddings])
 movies.iloc[cosine_similarities.argsort(descending=True).detach().numpy()]['title'].values[:10]
 ```
-```
+
+```python
 ['Toy Story (1995)',
  'Toy Story 2 (1999)',
  "Bug's Life, A (1998)",
@@ -203,6 +204,7 @@ movies.iloc[cosine_similarities.argsort(descending=True).detach().numpy()]['titl
  'Tarzan (1999)',
  'Back to the Future (1985)']
 ```
+
 Nice! The model placed kids animations close to each other.
 
 Make Movie Recommendations
@@ -248,7 +250,7 @@ rankings = movie_biases.squeeze()+(metadata_embedding*movie_embeddings).sum(1)
 movies.iloc[rankings.argsort(descending=True)]['title'].values[:10]
 ``` 
 
-```
+```python
 ['Shawshank Redemption, The (1994)',
  'Usual Suspects, The (1995)',
  'American Beauty (1999)',
@@ -270,7 +272,7 @@ rankings = movie_biases.squeeze()+(metadata_embedding*movie_embeddings).sum(1)
 movies.iloc[rankings.argsort(descending=True)]['title'].values[:10]
 ``` 
 
-```
+```python
 ['To Kill a Mockingbird (1962)',
  'Wrong Trousers, The (1993)',
  'African Queen, The (1951)',
@@ -404,7 +406,7 @@ search_body = {
 * The "source" script is the ranking method on each movie document with the v_metadata from stage 2.
 
 And the results...
-```
+```python
 ['Shawshank Redemption, The (1994)',
  'Usual Suspects, The (1995)',
  'American Beauty (1999)',
