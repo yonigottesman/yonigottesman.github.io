@@ -15,14 +15,14 @@ Introduction
 ==
 The goal of an image retrieval system is to let a user send a query image and return a list of most similar images to the query. For example with [google reverse image search](https://support.google.com/websearch/answer/1325808?co=GENIE.Platform%3DDesktop&hl=en) you can send an image and get all similar images and their web pages. Amazon also has an option to [search by image](https://www.amazon.com/b?ie=UTF8&node=17387598011), just take a picture of something you see and immediately get a list of items sold by amazon that look the same as your picture.  
 
-Im going to build an application to retrieve **food** images and deploy it as a web service.
+I'm going to build an application to retrieve **food** images and deploy it as a web service.
 
 
 System Architecture 
 ===================
 ![arch]({{ "/assets/image_search_arch.svg" | absolute_url }}){:height="100%" width="100%"}
 
-workflow
+Workflow
 =======
 1. Train Models  
    * Train embedding extractor based on resnet34
@@ -36,14 +36,14 @@ workflow
    * Client sends an image
    * Web app transforms image to an embedding using pytorch model
    * Web app finds approximate nearest neighbors of embedding using Annoy
-   * Return to client list of nearest images ids
+   * Return to client list of nearest images id's
    * Client downloads images from s3
 
 
 
 Screenshot
 =========
-The web app has a simple ui, uploading [this](https://en.wikipedia.org/wiki/Pizza#/media/File:Pizza_Margherita_stu_spivack.jpg) image  
+The web app has a simple UI, uploading [this](https://en.wikipedia.org/wiki/Pizza#/media/File:Pizza_Margherita_stu_spivack.jpg) image  
 ![pizza]({{ "/assets/Pizza_Margherita_stu_spivack.jpg" | absolute_url }}){:height="30%" width="30%"}
 
 
@@ -69,7 +69,7 @@ Part I - Train Model
 The full training code containing the dataset creation, training loops etc is in [this notebook](https://github.com/yonigottesman/deepfood/blob/master/notebooks/train_model.ipynb). 
 The dataset I use for fine tuning the model is [iFood](https://www.kaggle.com/c/ifood-2019-fgvc6/data), which contain food images like
 ![ifood]({{- "/assets/food.png" | absolute_url -}}){:height="100%" width="100%"}
-First step is to download the resenet34 pretrained model and replace the last layer with a new one with 251 outputs which is the number of classes in the ifood dataset.
+First step is to download the resenet34 pre-trained model and replace the last layer with a new one with 251 outputs which is the number of classes in the ifood dataset.
 
 
 ```python
@@ -80,7 +80,7 @@ num_ftrs = model.fc.in_features # output of previous layer
 model.fc = nn.Linear(num_ftrs, 251)
 ```
 
-After about 20 epochs the top3 accuracy is around 0.84, this brings me to the middle of the scoreboard and is good enough for extracting embeddings. State of the art image similarity systems use a triplet loss function and dont train on a classification problem. [2](https://arxiv.org/abs/1404.4661), [3](https://arxiv.org/pdf/1503.03832.pdf). 
+After about 20 epochs the top3 accuracy is around 0.84, this brings me to the middle of the scoreboard and is good enough for extracting embeddings. State of the art image similarity systems use a triplet loss function and don't train on a classification problem. [2](https://arxiv.org/abs/1404.4661), [3](https://arxiv.org/pdf/1503.03832.pdf). 
 
 
 
@@ -118,7 +118,7 @@ And thats our black box :white_square_button:.
 
 What are Embeddings
 ===================
-The neural network extracts for each image a 512 dimension vector where each index represents a feature of the image. These features were learned automatically but we can still try to guess what each feature represents by feeding lots of images through the nework and displaying the images that maximize a specific feature.  
+The neural network extracts for each image a 512 dimension vector where each index represents a feature of the image. These features were learned automatically but we can still try to guess what each feature represents by feeding lots of images through the network and displaying the images that maximize a specific feature.  
 
 First I calculate the embeddings for all images in the dataset (full code is [here](https://github.com/yonigottesman/deepfood/blob/master/notebooks/embeddings.ipynb))
 ```python
@@ -137,7 +137,7 @@ def display_best_images(feature_index):
 display_best_images(10)
 ```
 ![feature_10]({{ "/assets/feature_10.png" | absolute_url }})
-Looks like feature 10 is "image contains lots of curly thin lines". These images dont have to look alike, they just share this single trait. Images that (in human eyes) are similar will share many of these traits and be close to one another in the embedding space.
+Looks like feature 10 is "image contains lots of curly thin lines". These images don't have to look alike, they just share this single trait. Images that (in human eyes) are similar will share many of these traits and be close to one another in the embedding space.
 
 Nearest Neighbors Search with Annoy
 ======================
@@ -145,12 +145,12 @@ Nearest Neighbors Search with Annoy
 
 Part II - Deploy Application
 ------
-Creating the model and index for image search is nice and interesting, but in order to use it in a real world application I will deply a service that accepts user images and returns a list of results. The images, model and index will all be stored in an s3 bucket.
+Creating the model and index for image search is nice and interesting, but in order to use it in a real world application I will deploy a service that accepts user images and returns a list of results. The images, model and index will all be stored in an s3 bucket.
 
 
 Create Index & Upload to S3
 ======
-The index of images will be created from two datasets: [iFood](https://www.kaggle.com/c/ifood-2019-fgvc6/data) which is the data I trained on, and [Food 101](https://www.kaggle.com/dansbecker/food-101). The id of each image is the filename in this format  \<id\>.jpg. I use [this](https://github.com/yonigottesman/deepfood/blob/master/notebooks/create_index_images.sh) script to downlaod the datasets, put all the images in the same folder and change all the filenames to ids. To create the Annoy index I iterate through all the images, extract their embedding and add the embedding to Annoy
+The index of images will be created from two datasets: [iFood](https://www.kaggle.com/c/ifood-2019-fgvc6/data) which is the data I trained on, and [Food 101](https://www.kaggle.com/dansbecker/food-101). The id of each image is the filename in this format  \<id\>.jpg. I use [this](https://github.com/yonigottesman/deepfood/blob/master/notebooks/create_index_images.sh) script to download the datasets, put all the images in the same folder and change all the filenames to id's. To create the Annoy index I iterate through all the images, extract their embedding and add the embedding to Annoy
 ```python
 t = AnnoyIndex(512, 'euclidean')
 for batch in tqdm(dataloader):
@@ -162,7 +162,7 @@ for batch in tqdm(dataloader):
 t.build(5) # 5 trees
 t.save('tree_5.ann')
 ```
-Im building the Annoy index with 5 trees, this is a configuration that tradeoffs size of index, speed and accuracy. The full notebook [here]().  
+I'm building the Annoy index with 5 trees, this is a configuration that tradeoffs size of index, speed and accuracy. The full notebook [here]().  
 Next step is to upload the index, the resnet34 embeddings extractor and all images to s3 using the aws [cli](https://aws.amazon.com/cli/)
 ```bash
 aws s3 cp --acl public-read model.pt s3://deepfood/
@@ -193,7 +193,7 @@ async def search(request):
     return JSONResponse(result)
 
 ```
-The code extracts the image from the request, computes embeddings using our trained resnet, calls Annoy search function and returns a list of urls for the frontend to display.
+The code extracts the image from the request, computes embeddings using our trained resnet, calls Annoy search function and returns a list of URL's for the frontend to display.
 
 [**extractor.py**](https://github.com/yonigottesman/deepfood/blob/master/deepfood_service/app/app/extractor.py) contains the code that initializes the models.
 
@@ -215,7 +215,7 @@ RUN wget --output-document=app/models/model.pt  https://deepfood.s3-us-west-2.am
 RUN wget --output-document=app/models/index.ann https://deepfood.s3-us-west-2.amazonaws.com/tree_5.ann
 RUN pip install -r requirements.txt 
 ```
-The first line inherits the docker file from [tiangolo/uvicorn-gunicorn](https://hub.docker.com/r/tiangolo/uvicorn-gunicorn-starlette) wich takes care of running the server. The rest copy the code into the image, installs requirements and **downloads the models from s3**.  
+The first line inherits the docker file from [tiangolo/uvicorn-gunicorn](https://hub.docker.com/r/tiangolo/uvicorn-gunicorn-starlette) which takes care of running the server. The rest copy the code into the image, installs requirements and **downloads the models from s3**.  
 to build and run the image
 ```shell
 docker build -t myimage ./
@@ -226,11 +226,11 @@ application can be accessed at localhost:80
 Deploy - AWS Elastic Beanstalk
 =====
 Elastic Beanstalk is an AWS service for deploying web applications. It supports docker and expects the Dockerfile to instruct it on how to build and deploy the image. Deploying on Beanstalk is easy peasy once you have a Dockerfile and the [eb-cli](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install.html) tool.  
-step 1 - create a new eb application:
+step 1 - create a new eb application
 ```shell
 eb init -p docker deepfood
 ```
-step 2 - create configuration file .ebextensions/custom.config so that the instance we get has enough memory and starage space to use our models:
+step 2 - create configuration file .ebextensions/custom.config so that the instance we get has enough memory and storage space to use our models
 ```shell
 aws:autoscaling:launchconfiguration:
   InstanceType: t2.large
@@ -251,7 +251,7 @@ More info can be found in official [doc](https://docs.aws.amazon.com/elasticbean
 
 Summary
 -----
-In this post I deplyed an image retrieval system on aws. These were the steps:
+In this post I deployed an image retrieval system on aws. These were the steps:
 1. Fine tune resnet34 model on food images.
 2. Build Annoy index.
 3. Upload model, index and all images to s3.
