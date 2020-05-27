@@ -1,0 +1,18 @@
+/*-----------------------------------*/
+/*--- IMPORT STYLES FOR FASTPAGES ---*/
+@import "fastpages-styles";   
+
+
+
+/*-----------------------------------*/
+/*----- ADD YOUR STYLES BELOW -------*/
+
+
+//make the math with horizontal scrolling
+.math-scroll {
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+// If you want to turn off dark background for syntax highlighting, comment or delete the below line.
+@import "fastpages-dracula-highlight"; 

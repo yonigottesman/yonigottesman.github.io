@@ -3,7 +3,7 @@ layout: post
 title:  "Movie Recommender from Pytorch to Elasticsearch"
 excerpt: "Train and serve a movie recommender from scratch using movielens, pytorch, factorization machines and elasticsearch "
 date:   2020-02-18 06:48:38 +0200
-categories: recsys pytorch elasticsearch
+categories: [recsys, pytorch, elasticsearch]
 ---
 
 <!-- Mathjax Support -->
@@ -230,8 +230,9 @@ $$
 </div>
 To summarize, when a user with metadata x,y,z needs a recommendation, I will sum the metadata embeddings $$ v_{metadata}=v_x+v_y+v_z$$ and rank all the movies by calculating:
 
+<div class="math-scroll">
 $$ rank(movie_i):=w_{movie_i}+\langle v_{metadata},movie_i\rangle $$
-
+</div>
 Lets recommend top 10 movies to a male aged 18 to 25 new user with these steps:
 1. Get "man" embeddings $$v_{9754}$$
 2. Get "age 18 to 25" embeddings $$v_{9747}$$
