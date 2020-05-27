@@ -14,7 +14,7 @@ Introduction
 ==
 The goal of an image retrieval system is to let a user send a query image and return a list of most similar images to the query. For example with [google reverse image search](https://support.google.com/websearch/answer/1325808?co=GENIE.Platform%3DDesktop&hl=en) you can send an image and get all similar images and their web pages. Amazon also has an option to [search by image](https://www.amazon.com/b?ie=UTF8&node=17387598011), just take a picture of something you see and immediately get a list of items sold by amazon that look the same as your picture.  
 
-Im going to build an application to retrieve **food** images and deploy it as web service.
+Im going to build an application to retrieve **food** images and deploy it as a web service.
 
 
 System Architecture 
