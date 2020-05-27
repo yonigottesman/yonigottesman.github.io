@@ -136,7 +136,7 @@ def display_best_images(feature_index):
 display_best_images(10)
 ```
 ![feature_10]({{ "/assets/feature_10.png" | absolute_url }})
-Looks like feature 10 is "image contains lots of stright thin lines". These images dont have to look alike, they just share this single trait. Images that (in human eyes) are similar will share many of these traits and be close to one another in the embedding space.
+Looks like feature 10 is "image contains lots of curly thin lines". These images dont have to look alike, they just share this single trait. Images that (in human eyes) are similar will share many of these traits and be close to one another in the embedding space.
 
 Nearest Neighbors Search with Annoy
 ======================
