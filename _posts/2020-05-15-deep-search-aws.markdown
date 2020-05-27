@@ -4,7 +4,8 @@ title:  "Deepfood - Image Retrieval System in Production"
 excerpt: "Build and deploy a food image retrieval system with pytorch, annoy, starlette and AWS Elastic Beanstalk"
 date:   2020-05-15 06:48:38 +0200
 hide: false
-<!-- categories: deep-learning transfer-learning annoy-ann aws -->
+categories: deep-learning transfer-learning annoy ann aws
+permalink: /2020/05/15/deep-search-aws.html/
 ---
 
 In this post I will build and **deploy** a food image retrieval system. I will use pytorch to train a model that extracts image features, Annoy for finding nearest neighbor images for a given query image, starlette for building a web application and AWS Elastic Beanstalk for deploying the app. Lets begin!  
