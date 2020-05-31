@@ -74,8 +74,6 @@ First step is to download the resenet34 pre-trained model and replace the last l
 
 ```python
 model = models.resnet34(pretrained=True)
-for param in model.parameters():
-    param.requires_grad = False
 num_ftrs = model.fc.in_features # output of previous layer
 model.fc = nn.Linear(num_ftrs, 251)
 ```
