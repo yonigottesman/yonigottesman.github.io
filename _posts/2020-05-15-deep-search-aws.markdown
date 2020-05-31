@@ -97,10 +97,10 @@ EmbeddingExtractor class registers a hook to the model on \__init\__. When get_e
 class  EmbeddingExtractor:
     def sniff_output(self,model, input, output):
         self.embeddings=output  
-    def __init__(self,model):
+    def __init__(self):
         self.model = models.resnet34(pretrained=False)
         self.model.fc = nn.Linear(self.model.fc.in_features, 251)
-        self.model = model.to(device)
+        self.model = self.model.to(device)
         self.model.load_state_dict(torch.load('model.pt'))
         self.model.eval()
         layer = self.model._modules.get('avgpool')
@@ -110,7 +110,7 @@ class  EmbeddingExtractor:
             self.model(input.to(device))
         return self.embeddings.squeeze(-1).squeeze(-1)
         
-extractor = EmbeddingExtractor(model)
+extractor = EmbeddingExtractor()
 ```
 And thats our black box :white_square_button:.
 
