@@ -69,7 +69,7 @@ class FMModel(nn.Module):
 ```
 
 There are a few things to point out here:
-   * I'm implementing lamma 3.1 from the paper that proves that the pairwise interactions can be done in $$O(kn)$$ and not $$O(kn^2)$$  like this:
+   * I'm implementing lemma 3.1 from the paper that proves that the pairwise interactions can be done in $$O(kn)$$ and not $$O(kn^2)$$  like this:
    <div class="math-scroll">
    $$ 
    \sum_{i = 1}^n\sum_{j = i + 1}^{n}\langle v_i, v_j\rangle x_ix_j =  \sum_{f=1}^k((\sum_{i=1}^{n}v_{i,f}x_i)^2-(\sum_{i=1}^{n}v_{i,f}^2x_i^2))
