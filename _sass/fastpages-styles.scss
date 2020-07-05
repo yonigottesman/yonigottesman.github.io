@@ -209,8 +209,8 @@ table {
   }
   td{
     text-overflow:ellipsis;
-    overflow:hidden;
-    max-width: 15em;
+    overflow:scroll;
+    // max-width: 15em;
   }
 }
 
