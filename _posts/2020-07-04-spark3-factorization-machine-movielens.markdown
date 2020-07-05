@@ -13,31 +13,35 @@ In this post I will prepare the movielens dataset as input to sparks new FM mode
 If you are not familiar with factorization machines you should start [here]({% post_url 2020-02-18-fm-torch-to-recsys %}).  
 The full code in my [github](https://github.com/yonigottesman/spark_fm).
 
-
 Prepare Data
 ====
-The input to a Factorization Machines model is a list of events where each row represents a user rating a movie together with all the other features - age, gender and occupation. For example:
+The input to a Factorization Machines model is a list of events where each row represents a user rating a movie together with all the other features - age, gender and occupation. For example
 
-![movielens_input]({{ "/assets/movielens_input.jpg" | absolute_url }})
+![movielens_input]({{ "/assets/fm_spark_imput.png" | absolute_url }})
+*figure 1*
 
+Sparks mllib FMRegressor expects this list to be represented by a dataframe with a rating (label) column and a features column that is a sparse vector like this:
 
-The FMRegressor I'm using from spark MLlib expects this list to be represented by a dataframe with a rating (label) column and a features column that is a sparse vector. For example
+```
++----------------------------------------------------+------+
+|features                                            |rating|
++----------------------------------------------------+------+
+|(9953,[0,8611,9929,9931,9943],[1.0,1.0,1.0,1.0,1.0])|5     |
+|(9953,[0,7858,9929,9931,9943],[1.0,1.0,1.0,1.0,1.0])|3     |
+|(9953,[0,8439,9929,9931,9943],[1.0,1.0,1.0,1.0,1.0])|3     |
+|(9953,[0,7136,9929,9931,9943],[1.0,1.0,1.0,1.0,1.0])|4     |
+|(9953,[0,6617,9929,9931,9943],[1.0,1.0,1.0,1.0,1.0])|5     |
++----------------------------------------------------+------+
+```
 
-|rating|features                                            |
-|------|----------------------------------------------------|
-|4     |(9953,[0,6124,9929,9931,9943],[1.0,1.0,1.0,1.0,1.0])|
-|4     |(9953,[0,6129,9929,9931,9943],[1.0,1.0,1.0,1.0,1.0])|
-|4     |(9953,[0,6230,9929,9931,9943],[1.0,1.0,1.0,1.0,1.0])|
-|5     |(9953,[0,6238,9929,9931,9943],[1.0,1.0,1.0,1.0,1.0])|
-
-The sparse vector format is (\<vector_size\>,\<indices\>,\<values\>). All the vectors in our case have the same size 9953 which is the number of feature values and all the values in this case are 1. The first line is the event that user 0 rated movie 6124 with 4, the other features are 
+The sparse vector format is (\<vector_size\>,\<indices\>,\<values\>). All the vectors in this case have the same size 9953 which is the number of feature values and all the values in this case are 1. The first line is the event that user 0 rated movie 8611 with 5, the other features are 
 * age 9929 (THE AGE)
-* gender 9931 ( THE GENDER) 
+* gender 9931 - Male 
 * occupation 9943 (THE OCCUPATION)  
 
 The following stages show how to transform the [movielens](http://files.grouplens.org/datasets/movielens/ml-1m.zip) dataset into this input dataframe.
 
-First read the movies file and create a unique index for each title
+Read movies file and create a unique index for each title
 
 ```scala
 val movies = spark.read.option("delimiter","::")
@@ -50,7 +54,7 @@ val titleIndexer = new StringIndexer()
   .fit(movies)
 ```
 
-For the users I create a unique index for each user feature: user_id, gender, age, occupation. Each feature is in a different column so I can use a pipeline of indexers
+Read users file and create a unique index for each user feature: user_id, gender, age, occupation. Each feature is in a different column so I use a pipeline of indexers
 
 ```scala
 val users = spark.read.option("delimiter","::")
@@ -75,18 +79,21 @@ val ratingsJoined = ratings
   .join(usersIndexed,Seq("user_id"))
   .join(moviesIndexed,Seq("movie_id"))
 
-ratingsJoined.show(4)
+ratingsJoined.select((featureColumns:+"rating").map(col):_*).show(4)
 ```
+```
++-------------+-----------+---------+------------+----------------+------+
+|user_id_index|title_index|age_index|gender_index|occupation_index|rating|
++-------------+-----------+---------+------------+----------------+------+
+|          0.0|     2571.0|      6.0|         1.0|            11.0|     5|
+|          0.0|     1818.0|      6.0|         1.0|            11.0|     3|
+|          0.0|     2399.0|      6.0|         1.0|            11.0|     3|
+|          0.0|     1096.0|      6.0|         1.0|            11.0|     4|
++-------------+-----------+---------+------------+----------------+------+
+```
+This is the list of events but each column contains indices ranging from 0 to size of feature - gender_index has values [0,1], title_index has values [0-3096] (3096 unique titles) etc. I need to shift the columns values so that each feature starts from the correct offset just like in figure 1. To add the offset, first calculate the size of each feature and then calculate the cumulative sum up until each feature:
 
-|movie_id|rating|     time|gender|age|occupation|zipcode|user_id_index|gender_index|age_index|occupation_index|               title|              genres|title_index|
-|-------|-------|-----------------------------------------------------------------------------------------------------------------------------------------------------------
-|    1193|      1|     5|978300760|     F|  1|        10|  48067|          0.0|         1.0|      6.0|            11.0|One Flew Over the...|               Drama|     2571.0|
-|     661|      1|     3|978302109|     F|  1|        10|  48067|          0.0|         1.0|      6.0|            11.0|James and the Gia...|Animation|Childre...|     1818.0|
-|     914|      1|     3|978301968|     F|  1|        10|  48067|          0.0|         1.0|      6.0|            11.0| My Fair Lady (1964)|     Musical|Romance|     2399.0|
-|    3408|      1|     4|978300275|     F|  1|        10|  48067|          0.0|         1.0|      6.0|            11.0|Erin Brockovich (...|               Drama|     1096.0|
-
-
-All our feature *_index columns are indices from 0 to size of feature. For example gender_index has values [0,1], title_index has values [0-3096] (3096 unique titles) but I need to shift each feature to start from the correct offset. First calculate the size of each feature using countDistinct
+Calculate the size of each feature using countDistinct
 
 ```scala
 // movies feature sizes
@@ -100,7 +107,95 @@ val userFeaturSizesDf = usersIndexed
   .select(userfeatureColumns.map(c => countDistinct(col(c)).alias(c)): _*)
 val userFeatureSizes = Map(userfeatureColumns
   .zip(userFeaturSizesDf.take(1)(0).toSeq.map(_.asInstanceOf[Long])):_*)
+val featureSizes = userFeatureSizes + ("title_index"->numMovies)
+print(featureSizes)
+```
+```
+Map(user_id_index -> 6040, age_index -> 7, title_index -> 3883, occupation_index -> 21, gender_index -> 2)
+```
+Calculate cumulative sum until each feature using scanLeft
+
+```scala 
+val featureOffsets = Map(featureColumns
+  .zip(featureColumns.scanLeft(0L)((agg,current)=>agg+featureSizes(current)).dropRight(1)):_*)
+print(featureOffsets)
+```
+```
+Map(user_id_index -> 0, age_index -> 9923, title_index -> 6040, occupation_index -> 9932, gender_index -> 9930)
+```
+Go over columns and add correct offset to column
+```scala
+val ratingsInput = ratingsJoined
+  .select(featureColumns.map(name=>(col(name) + lit(featureOffsets(name))).alias(name)):+$"rating":_*)
+ratingsInput.show(10)
+```
+```
++-------------+-----------+---------+------------+----------------+------+
+|user_id_index|title_index|age_index|gender_index|occupation_index|rating|
++-------------+-----------+---------+------------+----------------+------+
+|          0.0|     8611.0|   9929.0|      9931.0|          9943.0|     5|
+|          0.0|     7858.0|   9929.0|      9931.0|          9943.0|     3|
+|          0.0|     8439.0|   9929.0|      9931.0|          9943.0|     3|
+|          0.0|     7136.0|   9929.0|      9931.0|          9943.0|     4|
++-------------+-----------+---------+------------+----------------+------+
+```
+Each column is now starting from the correct offset. Next convert each row to a sparse vector column and a label column
+```scala
+val createFeatureVectorUdf = udf((size:Int,
+                                  user_id_index:Int,
+                                  movie_index:Int,
+                                  age_index:Int,
+                                  gender_index:Int,
+                                  occupation_index:Int) =>
+Vectors.sparse(size,Array(user_id_index,movie_index,age_index,gender_index,occupation_index),Array.fill(5)(1)))
+val data = ratingsInput
+  .withColumn("features",createFeatureVectorUdf(lit(featureVectorSize)+:featureColumns.map(col):_*))
+data.select("features","rating").show(10,false)
+```
+```
++----------------------------------------------------+------+
+|features                                            |rating|
++----------------------------------------------------+------+
+|(9953,[0,8611,9929,9931,9943],[1.0,1.0,1.0,1.0,1.0])|5     |
+|(9953,[0,7858,9929,9931,9943],[1.0,1.0,1.0,1.0,1.0])|3     |
+|(9953,[0,8439,9929,9931,9943],[1.0,1.0,1.0,1.0,1.0])|3     |
+|(9953,[0,7136,9929,9931,9943],[1.0,1.0,1.0,1.0,1.0])|4     |
++----------------------------------------------------+------+
+```
+Data is ready!
+
+Train Model
+====
+split data to train and test
+```scala
+val Array(trainingData, testData) = data.randomSplit(Array(0.9, 0.1))
+```
+Create FMRegressor with embedding size 150 and fit on trainingdata
+```scala
+val fm = new FMRegressor()
+      .setLabelCol("rating")
+      .setFeaturesCol("features")
+      .setFactorSize(150)
+      .setStepSize(0.01)
+      
+val model = fm.fit(trainingData)
+```
+Evaluate rmse on testdata
+```scala
+val predictions = model.transform(testData)   
+val evaluator = new RegressionEvaluator()
+  .setLabelCol("rating")
+  .setPredictionCol("prediction")
+  .setMetricName("rmse")
+val rmse = evaluator.evaluate(predictions)
+print(s"test rmse = $rmse")
+```
+```
+test rmse = 0.88
+```
+[My pytorch model]({% post_url 2020-02-18-fm-torch-to-recsys %}) on the same data had 0.85 rmse so some more parameter tuning is probably needed here.  
+Save model
+```scala
+model.write.overwrite().save("fmmodel")
 ```
 
-
-cumulative sum

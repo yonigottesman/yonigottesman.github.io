@@ -7,6 +7,14 @@
 /*-----------------------------------*/
 /*----- ADD YOUR STYLES BELOW -------*/
 
+.post-content p, .post-content li {
+    font-size: 16px;
+}
+
+.input_area pre, .input_area div {
+    font-size: 110%;
+}
+
 
 //make the math with horizontal scrolling
 .math-scroll {
