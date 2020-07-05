@@ -1,10 +1,11 @@
 ---
 layout: post
-title:  "Movie Recommender from Spark 3.0.0 to Elasticsearch"
+title:  "*DRAFT* Movie Recommender from Spark 3.0.0 to Elasticsearch"
 excerpt: "Train and serve a movie recommender using spark 3.0.0 mllib, factorization machines and elasticsearch "
 date:   2020-07-04 00:00:00 +0200
 categories: [recsys, spark, elasticsearch]
 hide: true
+permalink: /2020/07/04/spark3-fm-movielens.html/
 ---
 
 Spark 3.0.0 release adds a new [Factorization Machines](https://issues.apache.org/jira/browse/SPARK-29224) regression model to its mllib and this is a greate opportunity (for me) to revisit my [first]({% post_url 2020-02-18-fm-torch-to-recsys %}) blog on factorization machines and this time train the model using spark.  
