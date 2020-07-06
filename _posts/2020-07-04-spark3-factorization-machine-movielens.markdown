@@ -26,11 +26,10 @@ Sparks mllib FMRegressor expects this list to be represented by a dataframe with
 +----------------------------------------------------+------+
 |features                                            |rating|
 +----------------------------------------------------+------+
-|(9953,[0,8611,9929,9931,9943],[1.0,1.0,1.0,1.0,1.0])|5     |
-|(9953,[0,7858,9929,9931,9943],[1.0,1.0,1.0,1.0,1.0])|3     |
-|(9953,[0,8439,9929,9931,9943],[1.0,1.0,1.0,1.0,1.0])|3     |
-|(9953,[0,7136,9929,9931,9943],[1.0,1.0,1.0,1.0,1.0])|4     |
-|(9953,[0,6617,9929,9931,9943],[1.0,1.0,1.0,1.0,1.0])|5     |
+|(9953,[0,6042,9923,9930,9934],[1.0,1.0,1.0,1.0,1.0])|4     |
+|(9953,[1,7858,9925,9931,9932],[1.0,1.0,1.0,1.0,1.0])|1     |
+|(9953,[0,6040,9923,9930,9934],[1.0,1.0,1.0,1.0,1.0])|2     |
+|(9953,[9,6042,9929,9930,9932],[1.0,1.0,1.0,1.0,1.0])|3     |
 +----------------------------------------------------+------+
 ```
 
@@ -96,12 +95,12 @@ This is the list of events but each column contains indices ranging from 0 to si
 Calculate the size of each feature using countDistinct
 
 ```scala
-// movies feature sizes
+// movies feature size
 val numMovies = moviesIndexed
   .select(countDistinct($"title_index").alias("numMovies"))
   .take(1)(0).getAs[Long]("numMovies")
 
-// users feature sizes
+// users features sizes
 val userfeatureColumns = Seq("user_id_index","age_index","gender_index","occupation_index")
 val userFeaturSizesDf = usersIndexed
   .select(userfeatureColumns.map(c => countDistinct(col(c)).alias(c)): _*)
@@ -123,7 +122,7 @@ print(featureOffsets)
 ```
 Map(user_id_index -> 0, age_index -> 9923, title_index -> 6040, occupation_index -> 9932, gender_index -> 9930)
 ```
-Go over columns and add correct offset to column
+Add the correct offset to each column
 ```scala
 val ratingsInput = ratingsJoined
   .select(featureColumns.map(name=>(col(name) + lit(featureOffsets(name))).alias(name)):+$"rating":_*)
@@ -139,7 +138,7 @@ ratingsInput.show(10)
 |          0.0|     7136.0|   9929.0|      9931.0|          9943.0|     4|
 +-------------+-----------+---------+------------+----------------+------+
 ```
-Each column is now starting from the correct offset. Next convert each row to a sparse vector column and a label column
+Each column is now starting from the correct offset. Next convert each row to a sparse vector column using a udf
 ```scala
 val createFeatureVectorUdf = udf((size:Int,
                                   user_id_index:Int,
@@ -148,6 +147,7 @@ val createFeatureVectorUdf = udf((size:Int,
                                   gender_index:Int,
                                   occupation_index:Int) =>
 Vectors.sparse(size,Array(user_id_index,movie_index,age_index,gender_index,occupation_index),Array.fill(5)(1)))
+
 val data = ratingsInput
   .withColumn("features",createFeatureVectorUdf(lit(featureVectorSize)+:featureColumns.map(col):_*))
 data.select("features","rating").show(10,false)
@@ -168,7 +168,7 @@ Train Model
 ====
 split data to train and test
 ```scala
-val Array(trainingData, testData) = data.randomSplit(Array(0.9, 0.1))
+val Array(trainset, testset) = data.randomSplit(Array(0.9, 0.1))
 ```
 Create FMRegressor with embedding size 150 and fit on trainingdata
 ```scala
@@ -178,11 +178,11 @@ val fm = new FMRegressor()
       .setFactorSize(150)
       .setStepSize(0.01)
       
-val model = fm.fit(trainingData)
+val model = fm.fit(trainset)
 ```
 Evaluate rmse on testdata
 ```scala
-val predictions = model.transform(testData)   
+val predictions = model.transform(testset)   
 val evaluator = new RegressionEvaluator()
   .setLabelCol("rating")
   .setPredictionCol("prediction")
@@ -193,9 +193,43 @@ print(s"test rmse = $rmse")
 ```
 test rmse = 0.88
 ```
-[My pytorch model]({% post_url 2020-02-18-fm-torch-to-recsys %}) on the same data had 0.85 rmse so some more parameter tuning is probably needed here.  
+[My pytorch model]({% post_url 2020-02-18-fm-torch-to-recsys %}) on the same data had 0.85 rmse so some more parameter tuning is needed here.  
 Save model
 ```scala
 model.write.overwrite().save("fmmodel")
 ```
 
+Index Documents to Elasticserach
+====
+In elasticsearch each document will represent a single feature value and will contain its index, type (user, movie, age, gender, occupation), embedding and bias.
+Elasticsearch-spark library expects a dataframe where each row is a document, the next stages will create these document dataframes:  
+
+Read saved model and create dataframe of (index,bias,embedding)
+```scala
+val fmModel:FMRegressionModel = FMRegressionModel.load("fmmodel")
+val biases = fmModel.linear
+val matrixRows = fmModel.factors.rowIter.toSeq.map(_.toArray).zip(biases.toArray)
+  .zipWithIndex.map { case ((a, b), i) => (a, b, i) }
+
+val df = spark.sparkContext
+  .parallelize(matrixRows)
+  .toDF("factors","bias","index")
+
+df.show(10)
+```
+```
++--------------------+-------------------+-----+
+|             factors|               bias|index|
++--------------------+-------------------+-----+
+|[0.15304544671748...| 0.1286711048104852|    0|
+|[-0.0604191869529...|0.14049641807982274|    1|
+|[-0.0216517451739...|0.09095405615392088|    2|
+|[-0.0601625410551...| 0.1193751031717465|    3|
+|[-0.0602953396590...|0.12194467266433821|    4|
+|[-0.0773424615697...|0.11409106109687571|    5|
+|[-0.0435265098103...| 0.1136480823921726|    6|
+|[-0.0669720973608...|0.10553797539790088|    7|
+|[-0.0538667336302...|0.11739928106811437|    8|
+|[-0.0426738628244...|0.06265541826676443|    9|
++--------------------+-------------------+-----+
+```
