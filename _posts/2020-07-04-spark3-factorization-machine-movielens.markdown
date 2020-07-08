@@ -8,7 +8,7 @@ hide: true
 permalink: /2020/07/04/spark3-fm-movielens.html/
 ---
 
-Spark 3.0.0 release adds a new [Factorization Machines](https://issues.apache.org/jira/browse/SPARK-29224) regression model to its mllib and this is a greate opportunity (for me) to revisit my [first]({% post_url 2020-02-18-fm-torch-to-recsys %}) blog on factorization machines and this time train the model using spark.  
+Spark 3.0.0 release adds a new [Factorization Machines](https://issues.apache.org/jira/browse/SPARK-29224) regression model to its mllib and this is a great opportunity (for me) to revisit my [first]({% post_url 2020-02-18-fm-torch-to-recsys %}) blog on factorization machines and this time train the model using spark.  
 In this post I will prepare the movielens dataset as input to sparks new FM model, train the FMRegressor and feed the documents to elasticsearch using the elasticsearch-spark library.  
 If you are not familiar with factorization machines or elasticsearch you should start [here]({% post_url 2020-02-18-fm-torch-to-recsys %}).  
 The full code in my [github](https://github.com/yonigottesman/spark_fm).
