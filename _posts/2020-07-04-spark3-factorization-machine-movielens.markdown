@@ -10,7 +10,7 @@ permalink: /2020/07/04/spark3-fm-movielens.html/
 
 Spark 3.0.0 release adds a new [Factorization Machines](https://issues.apache.org/jira/browse/SPARK-29224) regression model to its mllib and this is a greate opportunity (for me) to revisit my [first]({% post_url 2020-02-18-fm-torch-to-recsys %}) blog on factorization machines and this time train the model using spark.  
 In this post I will prepare the movielens dataset as input to sparks new FM model, train the FMRegressor and feed the documents to elasticsearch using the elasticsearch-spark library.  
-If you are not familiar with factorization machines you should start [here]({% post_url 2020-02-18-fm-torch-to-recsys %}).  
+If you are not familiar with factorization machines or elasticsearch you should start [here]({% post_url 2020-02-18-fm-torch-to-recsys %}).  
 The full code in my [github](https://github.com/yonigottesman/spark_fm).
 
 Prepare Data
@@ -33,10 +33,10 @@ Sparks mllib FMRegressor expects this list to be represented by a dataframe with
 +----------------------------------------------------+------+
 ```
 
-The sparse vector format is (\<vector_size\>,\<indices\>,\<values\>). All the vectors in this case have the same size 9953 which is the number of feature values and all the values in this case are 1. The first line is the event that user 0 rated movie 8611 with 5, the other features are 
-* age 9929 (THE AGE)
-* gender 9931 - Male 
-* occupation 9943 (THE OCCUPATION)  
+The sparse vector format is (\<vector_size\>,\<indices\>,\<values\>). All the vectors in this case have the same size 9953 which is the number of feature values and all the values in this case are 1. The first row is the event that user 0 rated movie 6042 ('Til There Was You (1997)) with 4, the other features are 
+* age 9923: 25-34
+* gender 9930: Female 
+* occupation 9934:  "executive/managerial"
 
 The following stages show how to transform the [movielens](http://files.grouplens.org/datasets/movielens/ml-1m.zip) dataset into this input dataframe.
 
@@ -44,13 +44,15 @@ Read movies file and create a unique index for each title
 
 ```scala
 val movies = spark.read.option("delimiter","::")
-  .csv("ml-1m/movies.dat")
+  .csv(ml1mPath+"/movies.dat")
   .toDF("movie_id","title","genres")
-    
+
 val titleIndexer = new StringIndexer()
   .setInputCol("title")
   .setOutputCol("title_index")
   .fit(movies)
+
+val moviesIndexed = titleIndexer.transform(movies)
 ```
 
 Read users file and create a unique index for each user feature: user_id, gender, age, occupation. Each feature is in a different column so I use a pipeline of indexers
@@ -107,7 +109,7 @@ val userFeaturSizesDf = usersIndexed
 val userFeatureSizes = Map(userfeatureColumns
   .zip(userFeaturSizesDf.take(1)(0).toSeq.map(_.asInstanceOf[Long])):_*)
 val featureSizes = userFeatureSizes + ("title_index"->numMovies)
-print(featureSizes)
+println(featureSizes)
 ```
 ```
 Map(user_id_index -> 6040, age_index -> 7, title_index -> 3883, occupation_index -> 21, gender_index -> 2)
@@ -117,7 +119,7 @@ Calculate cumulative sum until each feature using scanLeft
 ```scala 
 val featureOffsets = Map(featureColumns
   .zip(featureColumns.scanLeft(0L)((agg,current)=>agg+featureSizes(current)).dropRight(1)):_*)
-print(featureOffsets)
+println(featureOffsets)
 ```
 ```
 Map(user_id_index -> 0, age_index -> 9923, title_index -> 6040, occupation_index -> 9932, gender_index -> 9930)
@@ -173,10 +175,10 @@ val Array(trainset, testset) = data.randomSplit(Array(0.9, 0.1))
 Create FMRegressor with embedding size 120 and fit on trainset
 ```scala
 val fm = new FMRegressor()
-      .setLabelCol("rating")
-      .setFeaturesCol("features")
-      .setFactorSize(150)
-      .setStepSize(0.01)
+  .setLabelCol("rating")
+  .setFeaturesCol("features")
+  .setFactorSize(120)
+  .setStepSize(0.01)
       
 val model = fm.fit(trainset)
 ```
@@ -191,7 +193,7 @@ val rmse = evaluator.evaluate(predictions)
 print(s"test rmse = $rmse")
 ```
 ```
-test rmse = 0.8854
+test rmse = 0.890
 ```
 [My pytorch model]({% post_url 2020-02-18-fm-torch-to-recsys %}) on the same data had 0.85 rmse so some more parameter tuning is needed here.  
 
@@ -270,7 +272,7 @@ userfeatureColumns.foreach(columnName =>
     .saveToEs("recsys",Map("es.mapping.id" -> "id")))
 ```
 
-Thats it elasticsearch index ready for recommending movies! check out [previous]({% post_url 2020-02-18-fm-torch-to-recsys %}) post for setting up elasticsearch and query stages.
+Thats it elasticsearch index is ready for recommending movies! check out [previous]({% post_url 2020-02-18-fm-torch-to-recsys %}) post for setting up elasticsearch and query stages.
 
 
 
