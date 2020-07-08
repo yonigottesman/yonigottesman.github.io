@@ -170,7 +170,7 @@ split data to train and test
 ```scala
 val Array(trainset, testset) = data.randomSplit(Array(0.9, 0.1))
 ```
-Create FMRegressor with embedding size 150 and fit on trainingdata
+Create FMRegressor with embedding size 120 and fit on trainset
 ```scala
 val fm = new FMRegressor()
       .setLabelCol("rating")
@@ -180,7 +180,7 @@ val fm = new FMRegressor()
       
 val model = fm.fit(trainset)
 ```
-Evaluate rmse on testdata
+Evaluate rmse on testset
 ```scala
 val predictions = model.transform(testset)   
 val evaluator = new RegressionEvaluator()
@@ -191,12 +191,22 @@ val rmse = evaluator.evaluate(predictions)
 print(s"test rmse = $rmse")
 ```
 ```
-test rmse = 0.88
+test rmse = 0.8854
 ```
 [My pytorch model]({% post_url 2020-02-18-fm-torch-to-recsys %}) on the same data had 0.85 rmse so some more parameter tuning is needed here.  
-Save model
+
+Save model in table format and not `model.write.save()` because elasticsearch code will be running on spark 2.4.
+
+> Note: elasticsearch-spark is not compatible with scala 2.12 [(yet)](https://github.com/elastic/elasticsearch-hadoop/pull/1308) so the code is divided to 2 projects and some backflips where needed to read saved models from spark 3.0.0
+
 ```scala
-model.write.overwrite().save("fmmodel")
+val matrixRows = model.factors.rowIter.toSeq.map(_.toArray).zip(model.linear.toArray)
+  .zipWithIndex.map { case ((a, b), i) => (i, b, a) }
+
+spark.sparkContext
+  .parallelize(matrixRows)
+  .toDF("index","bias","embedding")
+  .write.mode(SaveMode.Overwrite).option("header","true").parquet("model_raw")
 ```
 
 Index Documents to Elasticserach
@@ -204,32 +214,63 @@ Index Documents to Elasticserach
 In elasticsearch each document will represent a single feature value and will contain its index, type (user, movie, age, gender, occupation), embedding and bias.
 Elasticsearch-spark library expects a dataframe where each row is a document, the next stages will create these document dataframes:  
 
-Read saved model and create dataframe of (index,bias,embedding)
+
+Read saved model
 ```scala
-val fmModel:FMRegressionModel = FMRegressionModel.load("fmmodel")
-val biases = fmModel.linear
-val matrixRows = fmModel.factors.rowIter.toSeq.map(_.toArray).zip(biases.toArray)
-  .zipWithIndex.map { case ((a, b), i) => (a, b, i) }
+val model = spark.read.option("header","true").parquet(modelPath)
+model.show(4)
+```
+```
++-----+-------------------+--------------------+
+|index|               bias|           embedding|
++-----+-------------------+--------------------+
+| 5805|0.13825787734251777|[-0.0555360040031...|
+| 5806|0.08648875415747574|[-0.0458145621058...|
+| 5807|0.11548980867642408|[-0.0769451271770...|
+| 5808|0.15566420826441005|[-0.0621027883297...|
++-----+-------------------+--------------------+
+```
 
-val df = spark.sparkContext
-  .parallelize(matrixRows)
-  .toDF("factors","bias","index")
+Create movie documents by joining the model with moviesIndexed on index column
+```scala
+val movieDocs = moviesIndexed
+  .join(model,$"title_index"===$"index")
+  .withColumn("feature_type",lit("movie"))
+  .withColumn("id",concat(lit("movie_"),$"index"))
+  .select("id","feature_type","embedding","bias","title")
+movieDocs.show(4)
+```
+```
++----------+------------+--------------------+-------------------+--------------------+
+|        id|feature_type|           embedding|               bias|               title|
++----------+------------+--------------------+-------------------+--------------------+
+|movie_6067|       movie|[-0.0256981204269...|0.09892066531869206|   52 Pick-Up (1986)|
+|movie_6433|       movie|[0.00727216899600...|0.09036617030523138|    Big Daddy (1999)|
+|movie_6454|       movie|[-0.0589911762405...|0.11337237570085894|Birdcage, The (1996)|
+|movie_6653|       movie|[-0.0533178530852...|0.11667342783518653|     Captives (1994)|
++----------+------------+--------------------+-------------------+--------------------+
+```
 
-df.show(10)
+Feed documents to elasticsearch
+```scala
+movieDocs.saveToEs("recsys",Map("es.mapping.id" -> "id"))
 ```
+
+Create user feature documents also by joining with model (remember indices are all unique) and feed to elasticsearch
+```scala
+val userfeatureColumns = Seq("user_id","age","gender","occupation")
+// Each iteration takes care of a different feature
+userfeatureColumns.foreach(columnName =>
+  usersIndexed
+    .dropDuplicates(columnName+"_index")
+    .join(model, col(columnName+"_index")===$"index")
+    .withColumn("feature_type",lit(columnName))
+    .withColumn("id",concat(lit(columnName+"_"),$"index"))
+    .select("id","feature_type","embedding","bias")
+    .saveToEs("recsys",Map("es.mapping.id" -> "id")))
 ```
-+--------------------+-------------------+-----+
-|             factors|               bias|index|
-+--------------------+-------------------+-----+
-|[0.15304544671748...| 0.1286711048104852|    0|
-|[-0.0604191869529...|0.14049641807982274|    1|
-|[-0.0216517451739...|0.09095405615392088|    2|
-|[-0.0601625410551...| 0.1193751031717465|    3|
-|[-0.0602953396590...|0.12194467266433821|    4|
-|[-0.0773424615697...|0.11409106109687571|    5|
-|[-0.0435265098103...| 0.1136480823921726|    6|
-|[-0.0669720973608...|0.10553797539790088|    7|
-|[-0.0538667336302...|0.11739928106811437|    8|
-|[-0.0426738628244...|0.06265541826676443|    9|
-+--------------------+-------------------+-----+
-```
+
+Thats it elasticsearch index ready for recommending movies! check out [previous]({% post_url 2020-02-18-fm-torch-to-recsys %}) post for setting up elasticsearch and query stages.
+
+
+
