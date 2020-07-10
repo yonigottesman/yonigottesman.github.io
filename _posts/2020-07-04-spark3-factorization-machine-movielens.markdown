@@ -1,10 +1,10 @@
 ---
 layout: post
-title:  "*DRAFT* Movie Recommender from Spark 3.0.0 to Elasticsearch"
+title:  "Movie Recommender from Spark 3.0.0 to Elasticsearch"
 excerpt: "Train and serve a movie recommender using spark 3.0.0 mllib, factorization machines and elasticsearch "
 date:   2020-07-04 00:00:00 +0200
 categories: [recsys, spark, elasticsearch]
-hide: true
+hide: false
 permalink: /2020/07/04/spark3-fm-movielens.html/
 ---
 
@@ -178,8 +178,9 @@ val fm = new FMRegressor()
   .setLabelCol("rating")
   .setFeaturesCol("features")
   .setFactorSize(120)
+  .setMaxIter(300)
+  .setRegParam(0.01)
   .setStepSize(0.01)
-      
 val model = fm.fit(trainset)
 ```
 Evaluate rmse on testset
@@ -193,7 +194,7 @@ val rmse = evaluator.evaluate(predictions)
 print(s"test rmse = $rmse")
 ```
 ```
-test rmse = 0.890
+test rmse = 0.866
 ```
 [My pytorch model]({% post_url 2020-02-18-fm-torch-to-recsys %}) on the same data had 0.85 rmse so some more parameter tuning is needed here.  
 
@@ -214,8 +215,7 @@ spark.sparkContext
 Index Documents to Elasticserach
 ====
 In elasticsearch each document will represent a single feature value and will contain its index, type (user, movie, age, gender, occupation), embedding and bias.
-Elasticsearch-spark library expects a dataframe where each row is a document, the next stages will create these document dataframes:  
-
+[Elasticsearch-spark](https://www.elastic.co/guide/en/elasticsearch/hadoop/master/spark.html) library expects a dataframe where each row is a document, the next stages will create these document dataframes:  
 
 Read saved model
 ```scala
@@ -253,7 +253,7 @@ movieDocs.show(4)
 +----------+------------+--------------------+-------------------+--------------------+
 ```
 
-Feed documents to elasticsearch
+Feed documents to elasticsearch using saveToEs
 ```scala
 movieDocs.saveToEs("recsys",Map("es.mapping.id" -> "id"))
 ```
