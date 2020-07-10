@@ -40,7 +40,7 @@ The sparse vector format is (\<vector_size\>,\<indices\>,\<values\>). All the ve
 
 The following stages show how to transform the [movielens](http://files.grouplens.org/datasets/movielens/ml-1m.zip) dataset into this input dataframe.
 
-Read movies file and create a unique index for each title
+Read movies file and create a unique index for each title using [StringIndexer](https://spark.apache.org/docs/3.0.0/api/java/index.html?org/apache/spark/ml/feature/StringIndexer.html)
 
 ```scala
 val movies = spark.read.option("delimiter","::")
@@ -55,7 +55,7 @@ val titleIndexer = new StringIndexer()
 val moviesIndexed = titleIndexer.transform(movies)
 ```
 
-Read users file and create a unique index for each user feature: user_id, gender, age, occupation. Each feature is in a different column so I use a pipeline of indexers
+Read users file and create a unique index for each user feature: user_id, gender, age, occupation. Each feature is in a different column so I use a [pipeline](https://spark.apache.org/docs/3.0.0/api/java/index.html?org/apache/spark/ml/feature/StringIndexer.html) of indexers
 
 ```scala
 val users = spark.read.option("delimiter","::")
