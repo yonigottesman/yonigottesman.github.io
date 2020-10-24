@@ -85,7 +85,7 @@ After about 20 epochs the top3 accuracy is around 0.84, this brings me to the mi
 <!-- The training is done in 2 parts, first freeze the whole network except the last layer, then unfreeze all and train all parameters with smaller learning rate.  All the boilerplate around training (datasets, tranforms, training loop) is in the [notebook](https://github.com/yonigottesman/deepfood/blob/master/notebooks/train_model.ipynb). -->
 <!-- State of the art systems use triplets to learn image similarity (), but for simplicity I chose to just train on a classification problem. More examples of training models for image similarity [here](https://github.com/microsoft/computervision-recipes/tree/master/scenarios/similarity). -->
 
-Exctract Image Embeddings
+Extract Image Embeddings
 ======
 To extract the embeddings of an image I use pytorch hooks mechanism to save the layer before the last fully connected layer. 
 ![resnet]({{ "/assets/resnet_emb.png" | absolute_url }})
