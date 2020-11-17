@@ -276,3 +276,11 @@ Thats it elasticsearch index is ready for recommending movies! check out [previo
 
 
 
+<script src="https://utteranc.es/client.js"
+        repo="yonigottesman/yonigottesman.github.io"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
