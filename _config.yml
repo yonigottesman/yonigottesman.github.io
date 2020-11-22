@@ -35,7 +35,9 @@ plugins:
   - jekyll-feed
   - jemoji
   - jekyll-sitemap
+  
 show_excerpts: true
+show_tags: false
 
 # this setting allows you to keep pages organized in the _pages folder
 include:

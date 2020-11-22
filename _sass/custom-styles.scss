@@ -16,6 +16,23 @@
 }
 
 
+// alerts copied from  https://github.com/coetzeer/blog_test/blob/e50b316376ad7aabe807b57fddd3bbf13e674a26/assets/css/callout.css
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px
+}
+
+.alert-info {
+    color: #31708f;
+    background-color: #d9edf7;
+    border-color: #bce8f1
+}
+
+
+
+
 //make the math with horizontal scrolling
 .math-scroll {
   overflow-x: auto;
