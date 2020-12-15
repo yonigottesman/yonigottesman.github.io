@@ -185,3 +185,13 @@ In this post I showed how to take a fixed WGAN trained on celeba and with a feat
 
 <!-- Real Image Manipulation -->
 <!-- == -->
+
+
+<script src="https://utteranc.es/client.js"
+        repo="yonigottesman/yonigottesman.github.io"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
