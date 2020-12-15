@@ -19,7 +19,7 @@ Conditional GAN architectures such as cGAN learn to generate fake images with a 
 The paper explores how different features are encoded in the latent space and show how by moving around this space you can control the features of a generated fake image.  
 In this post I will show how to turn a fixed unconstrained GAN to a controllable GAN just by moving around the latent space in the right direction.
 
-All the code can be found on my [github]() and the fixed trained GAN used is  wGAN I implemented  [here]().
+All the code can be found on my [github](https://github.com/yonigottesman/controllable_generation_gan) and the fixed trained GAN used is  wGAN I implemented  [here](https://github.com/yonigottesman/controllable_generation_gan/blob/main/wgan-gp-celeba.ipynb).
 
 
 {% include note.html 
