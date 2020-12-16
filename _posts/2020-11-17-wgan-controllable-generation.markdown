@@ -170,7 +170,7 @@ while smile_p < 0.995:
     z.data = z + (z.grad*lr) # 4
 ```
 
-In my [implementation]() I store the fake image in each step so I can later display how the fake image changes until its smiling:  
+When displaying the fake image from each iteration you can see how it gradually changes towards having a smile on the face:  
 
 ![smile generation]({{ "/assets/controll_gan/smile_generation.png" | absolute_url }}){:height="100%" width="100%"}
 
