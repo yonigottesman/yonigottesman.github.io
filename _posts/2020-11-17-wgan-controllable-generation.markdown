@@ -15,11 +15,11 @@ hide: false
 
 
 
-Conditional GAN architectures such as cGAN learn to generate fake images with a specific condition. For example the generator can be forced to generate images of people smiling, with or without glasses or with a specific hair color. But in order to achieve this, the GAN must be trained alongside with the conditional information. What if you are given a fixed trained GAN that was not trained with additional condition information, is it still possible to force the generator to generate images with specific features? according to this paper: [Interpreting the Latent Space of GANs for Semantic Face Editing](https://arxiv.org/abs/1907.10786), YES you can! 
+Conditional GAN architectures such as [cGAN](https://arxiv.org/abs/1411.1784) learn to generate fake images with a specific condition. For example the generator can be forced to generate images of people smiling, with or without glasses or with a specific hair color. But in order to achieve this, the GAN must be trained alongside with the conditional information. What if you are given a fixed trained GAN that was not trained with additional condition information, is it still possible to force the generator to generate images with specific features? according to this paper: [Interpreting the Latent Space of GANs for Semantic Face Editing](https://arxiv.org/abs/1907.10786), YES you can! 
 The paper explores how different features are encoded in the latent space and show how by moving around this space you can control the features of a generated fake image.  
 In this post I will show how to turn a fixed unconstrained GAN to a controllable GAN just by moving around the latent space in the right direction.
 
-All the code can be found on my [github](https://github.com/yonigottesman/controllable_generation_gan) and the fixed trained GAN used is  wGAN I implemented  [here](https://github.com/yonigottesman/controllable_generation_gan/blob/main/wgan-gp-celeba.ipynb).
+All the code can be found on my [github](https://github.com/yonigottesman/controllable_generation_gan) and the fixed trained wGAN trained on celeba is implemented  [here](https://github.com/yonigottesman/controllable_generation_gan/blob/main/wgan-gp-celeba.ipynb).
 
 
 {% include note.html 
@@ -56,7 +56,7 @@ Controllable Generation
 == 
 Just like with image interpolation, controllable generation also takes advantage of the fact that small changes in the latent space correspond to small changes in the generator output, except instead of moving on an interpolation between two vectors we move in a direction that only changes a single feature of the image. 
 For example, if the output of the generator for a vector $$z1$$ is a man without glasses, and we want to generate a man with glasses, we can move in a direction $$n$$ that (nearly) doesn't change anything in the image except adding the man glasses: $$ z1_{new}=z1+\alpha n$$ ($$\alpha$$=step size).  
-The questions are how do we know this direction even exists? and if it does how do we find it?
+
 
 Latent Space Separation
 ==
@@ -76,7 +76,7 @@ To learn these boundries, tuples of <latent vector, feature score> where generat
 
 Classifier Gradients
 ==
-Instead of learning separation boundaries and editing $$z$$ towards them, A different technique can be used. A pre-trained feature classifier can be applied on a fake image to calculate the probability of having a specific feature. Then $$z$$ can be edited according to the gradients of the probability with respect to $$z$$ to improve the probability. This iterative process does **not** train the GAN or the classifier, its "training" the noise vector $$z$$ to output fake images with/without a feature.
+Instead of learning separation boundaries and editing $$z$$ towards them, A different technique can be used. A pre-trained feature classifier can be applied on a fake image to calculate the probability of having a specific feature. Then $$z$$ can be edited according to the gradients of the probability with respect to $$z$$ towards improving the probability. This iterative process does **not** train the GAN or the classifier, its "training" the noise vector $$z$$ to output fake images with higher score of a specific feature.
 
 ![classifier_grad]({{ "/assets/controll_gan/classifier_grad.png" | absolute_url }})
 *deeplearning.ai*
@@ -132,7 +132,7 @@ mymshow(valid_dataset[idx][0],std,mean)
 label = tensor([0, 0, 1, 0])
 prediction = tensor([[False, False,  True, False]], device='cuda:0')
 ```
-Looking good!
+Classifier performance is good enough for this exercise. 
 
 Editing Latent Space
 ==
@@ -150,7 +150,7 @@ smile_p = classifier(fake).squeeze(0)[SMILE_INDEX].item()
 mymshow(fake.squeeze(0), std,mean,xlabel=f'p(smile)={smile_p:.2f}')
 ```
 ![first_smile]({{ "/assets/controll_gan/first_smile.png" | absolute_url }}){:height="40%" width="40%"}  
-To get this image to smile we are about to edit $$z$$ in small steps, each step will make the image a bit more happy :-)
+To get this image to smile we are about to edit $$z$$ in small steps, each step will make the image a bit happier :-)
 
 The iterative process is:
  1. Generate fake image from $$z$$. 
@@ -174,10 +174,31 @@ When displaying the fake image from each iteration you can see how it gradually 
 
 ![smile generation]({{ "/assets/controll_gan/smile_generation.png" | absolute_url }}){:height="100%" width="100%"}
 
+This process can be done in the opposite direction to remove a smile:  
+generate a fake image:
+
+```python
+with torch.no_grad():
+    fake = generator(z0)
+smile_p = classifier(fake).squeeze(0)[SMILE_INDEX].item()
+mymshow(fake.squeeze(0), std,mean,xlabel=f'p(smile)={smile_p:.2f}')
+```
+![first_smile positive]({{ "/assets/controll_gan/first_smile_pos.png" | absolute_url }}){:height="40%" width="40%"}  
+Now the iterative process will end when $$p(smile) < 0.1$$ and step 4 will update $$z$$ away from a high smile score:
+
+```python
+while smile_p > 0.1:
+    classifier.zero_grad()
+    fake = generator(z) # 1
+    smile_p = classifier(fake).squeeze(0)[SMILE_INDEX] # 2
+    smile_p.backward() # 3
+    z.data = z - (z.grad*lr) # 4
+```
+
 
 Conclusion
 ==
-In this post I showed how to take a fixed WGAN trained on celeba and with a feature classier manage to walk around the latent space in the direction of adding or removing a feature.
+In this post I showed how to take a fixed WGAN trained on celeba and use a  feature classier to walk around the latent space in the direction of adding or removing a feature.
 
 <!-- Feature Entanglement -->
 <!-- == -->
