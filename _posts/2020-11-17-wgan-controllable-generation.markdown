@@ -170,7 +170,7 @@ while smile_p.sigmoid() < 0.995:
     z.data = z + (z.grad*lr) # 4
 ```
 
-Note that I removed the sigmoid from the classifier model and added is manually only to print and compare more easily. The gradients are calculated without the sigmoid to avoid vanishing gradient problems I had in during this iterative process - when the probability of a feature was close to zero (no smile at all) the sigmoid gradient was 0 and the $$z$$ vector didnt move at all.
+Note that I removed the sigmoid from the classifier model and added it manually only to print and compare more easily. The gradients are calculated without the sigmoid to avoid vanishing gradient problems I had during this iterative process - when the probability of a feature was close to zero (no smile at all) the sigmoid gradient was 0 and the $$z$$ vector didnt move at all.
 
 
 When displaying the fake image from each iteration you can see how it gradually changes towards having a smile on the face:  
@@ -197,6 +197,7 @@ while smile_p.sigmoid() > 0.1:
     smile_p.backward() # 3
     z.data = z - (z.grad*lr) # 4
 ```
+![no smile generation]({{ "/assets/controll_gan/no_smile_generation.png" | absolute_url }}){:height="100%" width="100%"}
 
 The same process can be used to changed other features the classifier was trained to score, here is an example of turning the hair of a fake image black:
 
