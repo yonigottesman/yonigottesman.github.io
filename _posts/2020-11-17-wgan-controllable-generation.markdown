@@ -27,7 +27,7 @@ All the code can be found on my [github](https://github.com/yonigottesman/contro
 
 Latent Space Interpolation
 ==
-The generator of a trained GAN is a function $$ g:Z \to X $$ where $$ Z \subseteq  \mathbb{R}^d $$ is the $$d$$-dimensional latent space from which a noise vector is drawn and $$X$$ is the image space. Whats cool about this mapping is that small changes in a random vector $$z \in Z$$ correspond to small changes in the generated image. To visualize this coolness I can draw two vectors $$z1,z2 \in Z$$ and sample vectors on the linear interpolant between them:
+The generator of a trained GAN is a function $$ g:Z \to X $$ where $$ Z \subseteq  \mathbb{R}^d $$ is the $$d$$-dimensional latent space from which a noise vector is drawn and $$X$$ is the image space. What's cool about this mapping is that small changes in a random vector $$z \in Z$$ correspond to small changes in the generated image. To visualize this coolness I can draw two vectors $$z1,z2 \in Z$$ and sample vectors on the linear interpolant between them:
 
 ![interpolation_latent]({{ "/assets/controll_gan/interpolation_latent.png" | absolute_url }})
 
@@ -54,7 +54,7 @@ $$z1$$ and $$z2$$ are the left and rightmost images and you can see a smooth tra
 
 Controllable Generation
 == 
-Just like with image interpolation, controllable generation also takes advantage of the fact that small changes in the latent space correspond to small changes in the generator output, except instead of moving on an interpolation between two vectors we move in a direction that only changes a single feature of the image. 
+Just like with image interpolation, controllable generation also takes advantage of the fact that small changes in the latent space correspond to small changes in the generator output, except that instead of moving on an interpolation between two vectors we move in a direction that only changes a single feature of the image. 
 For example, if the output of the generator for a vector $$z1$$ is a man without glasses, and we want to generate a man with glasses, we can move in a direction $$n$$ that (nearly) doesn't change anything in the image except adding the man glasses: $$ z1_{new}=z1+\alpha n$$ ($$\alpha$$=step size).  
 
 
@@ -71,7 +71,7 @@ Starting with a vector $$z$$ and moving in the latent space, the feature we are 
 
 Starting with $$z_{0}$$ that generates an image without a smile :-( and editing it with $$z=z+\alpha \vec n$$ where $$\vec n $$ is the normal vector of the hyperplane until the boundary is crossed and the generated image is smiling :-).  
 
-To learn these boundries, tuples of <latent vector, feature score> where generated and used to train independent linear SVMs for each feature. They published the code [here](https://github.com/genforce/interfacegan/blob/master/train_boundary.py).
+To learn these boundries, tuples of <latent vector, feature score> were generated and used to train independent linear SVMs for each feature. They published the code [here](https://github.com/genforce/interfacegan/blob/master/train_boundary.py).
 
 
 Classifier Gradients
@@ -136,7 +136,7 @@ Classifier performance is good enough for this exercise.
 
 Editing Latent Space
 ==
-I now have all the building blocks I need: A fixed wgan trained without feature information and a classifer that can score features. I can now edit a random $$z$$ vector and change specific features in the fake image. Lets try adding a smile to a fake image.
+I now have all the building blocks I need: A fixed wgan trained without feature information and a classifer that can score features. I can now edit a random $$z$$ vector and change specific features in the fake image. Let's try adding a smile to a fake image.
 
 Sample a random vector $$z$$ and allow gradient computation on it. We need gradients to do a gradient ascent towards improving the feature probablity the classifier gives the image.
 ```python
