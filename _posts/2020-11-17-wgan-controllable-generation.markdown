@@ -146,8 +146,8 @@ The fake image generated from $$z$$ and the probability of it containing a smile
 ```python
 with torch.no_grad():
     fake = generator(z0)
-smile_p = classifier(fake).squeeze(0)[SMILE_INDEX].item()
-mymshow(fake.squeeze(0), std,mean,xlabel=f'p(smile)={smile_p:.2f}')
+smile_p = classifier(fake).squeeze(0)[SMILE_INDEX]
+mymshow(fake.squeeze(0), std,mean,xlabel=f'p(smile)={smile_p.sigmoid():.2f}')
 ```
 ![first_smile]({{ "/assets/controll_gan/first_smile.png" | absolute_url }}){:height="40%" width="40%"}  
 To get this image to smile we are about to edit $$z$$ in small steps, each step will make the image a bit happier :-)
@@ -162,13 +162,16 @@ This is done while the probability of a smile is under 0.995:
 
 ```python
 lr=0.1
-while smile_p < 0.995:
+while smile_p.sigmoid() < 0.995:
     classifier.zero_grad()
     fake = generator(z) # 1
     smile_p = classifier(fake).squeeze(0)[SMILE_INDEX] # 2
     smile_p.backward() # 3
     z.data = z + (z.grad*lr) # 4
 ```
+
+Note that I removed the sigmoid from the classifier model and added is manually only to print and compare more easily. The gradients are calculated without the sigmoid to avoid vanishing gradient problems I had in during this iterative process - when the probability of a feature was close to zero (no smile at all) the sigmoid gradient was 0 and the $$z$$ vector didnt move at all.
+
 
 When displaying the fake image from each iteration you can see how it gradually changes towards having a smile on the face:  
 
@@ -180,20 +183,24 @@ generate a fake image:
 ```python
 with torch.no_grad():
     fake = generator(z0)
-smile_p = classifier(fake).squeeze(0)[SMILE_INDEX].item()
-mymshow(fake.squeeze(0), std,mean,xlabel=f'p(smile)={smile_p:.2f}')
+smile_p = classifier(fake).squeeze(0)[SMILE_INDEX]
+mymshow(fake.squeeze(0), std,mean,xlabel=f'p(smile)={smile_p.sigmoid():.2f}')
 ```
 ![first_smile positive]({{ "/assets/controll_gan/first_smile_pos.png" | absolute_url }}){:height="40%" width="40%"}  
 Now the iterative process will end when $$p(smile) < 0.1$$ and step 4 will update $$z$$ away from a high smile score:
 
 ```python
-while smile_p > 0.1:
+while smile_p.sigmoid() > 0.1:
     classifier.zero_grad()
     fake = generator(z) # 1
     smile_p = classifier(fake).squeeze(0)[SMILE_INDEX] # 2
     smile_p.backward() # 3
     z.data = z - (z.grad*lr) # 4
 ```
+
+The same process can be used to changed other features the classifier was trained to score, here is an example of turning the hair of a fake image black:
+
+![black hair]({{ "/assets/controll_gan/black_hair.png" | absolute_url }}){:height="100%" width="100%"}  
 
 
 Conclusion
