@@ -206,7 +206,7 @@ The same process can be used to changed other features the classifier was traine
 
 Conclusion
 ==
-In this post I showed how to take a fixed WGAN trained on celeba and use a  feature classier to walk around the latent space in the direction of adding or removing a feature.
+In this post I showed how to take a fixed WGAN trained on celeba and use a  feature classifier to walk around the latent space in the direction of adding or removing a feature.
 
 <!-- Feature Entanglement -->
 <!-- == -->
