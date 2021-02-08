@@ -4,7 +4,7 @@ title:  "Mini CI/CD for Personal ML Projects"
 excerpt: "A few steps to insure code quality and model reproducibility in personal AI projects."
 date:   2021-02-05 00:00:00 +0200
 categories: [cicd,mlops,github]
-permalink: /2021/02/05/2021-02-05-mini-cicd-github-actions.html/
+permalink: /2021/02/05/mini-cicd-github-actions.html/
 hide: true
 ---
 
