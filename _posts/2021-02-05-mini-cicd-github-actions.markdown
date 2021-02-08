@@ -4,7 +4,7 @@ title:  "Mini CI/CD for Personal ML Projects"
 excerpt: "A few steps to insure code quality and model reproducibility in personal AI projects."
 date:   2021-02-05 00:00:00 +0200
 categories: [cicd,mlops,github]
-permalink: /2020/02/05/2021-02-05-mini-cicd-github-actions.html/
+permalink: /2021/02/05/2021-02-05-mini-cicd-github-actions.html/
 hide: true
 ---
 
@@ -72,7 +72,7 @@ eb create sentiment-env
 eb open
 ```
 Follow [this](https://aws.amazon.com/getting-started/hands-on/set-up-command-line-elastic-beanstalk/) tutorial to create access keys on your aws account so that the cli has permission to deploy.  
-The FastAPI app expects the tweet to be in a query string, so sending "I have really good luck :)" looks like:  
+The FastAPI app expects the tweet to be in a query string, so sending "I have really good luck :)" looks like: 
 [http://sentiment-env.eba-pcptvp7e.us-west-2.elasticbeanstalk.com/predict?tweet=i%20have%20really%20good%20luck%20:%29](http://sentiment-env.eba-pcptvp7e.us-west-2.elasticbeanstalk.com/predict?tweet=i%20have%20really%20good%20luck%20:%29)
 
 #### Pull Request Checks
