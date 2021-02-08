@@ -5,7 +5,7 @@ excerpt: "Add github-actions to yout ML project to improve code quality and mana
 date:   2021-02-05 00:00:00 +0200
 categories: [cicd,mlops,github]
 <!-- permalink: mini-cicd-github-actions.html/ -->
-hide: true
+hide: false
 ---
 
 If you are working in a big tech company, chances are you have a CI/CD pipeline built by engineers and devops for you. But what if you are working on a small side project, research or kaggle? You can still set up pretty decent CI/CD pipeline using [github-actions](https://github.com/features/actions). In this post I show how to take your ML project to the next level by:
