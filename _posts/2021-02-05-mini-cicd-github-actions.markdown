@@ -15,7 +15,7 @@ If you are working in a big tech company, chances are you have a CI/CD pipeline 
 
 These steps should not be taken as all-or-none, for example even if your project has no ML you should still add automatic steps to test your code and pass it through linters. 
 
-The example project with all these goodies [here](https://github.com/yonigottesman/sentiment).
+The example project with all these goodies is [here](https://github.com/yonigottesman/sentiment), and the model is served [here](http://sentiment-env.eba-pcptvp7e.us-west-2.elasticbeanstalk.com/predict?tweet=i%20have%20really%20good%20luck%20:%29)
 
 Sentiment Project Structure
 ---
