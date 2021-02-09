@@ -6,6 +6,7 @@ date:   2021-02-05 00:00:00 +0200
 categories: [cicd,mlops,github]
 <!-- permalink: mini-cicd-github-actions.html/ -->
 hide: true
+image: /assets/cicd/happy.jpg
 ---
 
 If you are working in a big tech company, chances are you have a CI/CD pipeline built by engineers and devops for you. But what if you are working on a small side project, research or kaggle? You can still set up pretty decent CI/CD pipeline using [github-actions](https://github.com/features/actions). In this post I show how to take your ML project to the next level by:
@@ -16,6 +17,10 @@ If you are working in a big tech company, chances are you have a CI/CD pipeline 
 These steps should not be taken as all-or-none, for example even if your project has no ML you should still add automatic steps to run tests and linting on your code. 
 
 The example project with all these goodies is [here](https://github.com/yonigottesman/sentiment), and the model is served [here](http://sentiment-env.eba-pcptvp7e.us-west-2.elasticbeanstalk.com/predict?tweet=i%20have%20really%20good%20luck%20:%29)
+
+GitHub Actions 
+--
+With github actions you can automate tasks within your github repository. You can configure it to run a series of commands after a specified event occurred, for example run tests when a pull-request is created, or run a deployment command when a pr is merged to main branch. All you need are a few .yml files in your repository that configure what command to run after which event.
 
 Sentiment Project Structure
 ---
