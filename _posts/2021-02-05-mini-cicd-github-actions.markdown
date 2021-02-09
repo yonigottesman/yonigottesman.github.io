@@ -1,7 +1,7 @@
 ---
 layout: post
-title:  "*DRAFT* Mini CI/CD for Personal ML Projects"
-excerpt: "Add github-actions to yout ML project to improve code quality and manage aws deployment."
+title:  "Mini CI/CD for Personal ML Projects"
+excerpt: "Add github-actions to your ML project to improve code quality and automate (FastAPI) aws deployment."
 date:   2021-02-05 00:00:00 +0200
 categories: [cicd,mlops,github]
 <!-- permalink: mini-cicd-github-actions.html/ -->
