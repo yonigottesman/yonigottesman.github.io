@@ -5,7 +5,7 @@ excerpt: "Add github-actions to yout ML project to improve code quality and mana
 date:   2021-02-05 00:00:00 +0200
 categories: [cicd,mlops,github]
 <!-- permalink: mini-cicd-github-actions.html/ -->
-hide: true
+hide: false
 image: /assets/cicd/happy.jpg
 ---
 
@@ -79,7 +79,7 @@ After I'm happy with the code changes and model performance I [upload](https://g
 The web framework I am using is [FastAPI](https://fastapi.tiangolo.com/), its really fast and designed for APIs. The application  code is in [main.py](https://github.com/yonigottesman/sentiment/blob/main/app/main.py) and basically has a single predict method
 ```python
 @app.get("/predict")
-def read_item(tweet: str):
+def predict(tweet: str):
     prob = inferencer.inference(tweet)
     return {
         'version': MODEL_VERSION,
