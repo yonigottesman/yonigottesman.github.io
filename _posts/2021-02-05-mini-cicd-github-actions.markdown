@@ -91,7 +91,7 @@ eb init -p docker sentiment
 eb create sentiment-env
 eb open
 ```
-Mazal Tov, your model is now being served from the cloud.  
+Mazal Tov :confetti_ball:, your model is now being served from the cloud.  
 
 If you haven't ever set up access keys for aws check out  [this](https://aws.amazon.com/getting-started/hands-on/set-up-command-line-elastic-beanstalk/) tutorial.
 
