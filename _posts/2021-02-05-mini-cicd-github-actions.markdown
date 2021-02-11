@@ -59,12 +59,13 @@ The project structure is:
 
 CI/CD Workflow
 --
+![cicd]({{ "/assets/cicd/cicd.png" | cicd }}){:height="50%" width="50%"}
 
 1. Model is happily served [here](http://sentiment-env.eba-pcptvp7e.us-west-2.elasticbeanstalk.com/predict?tweet=i%20have%20really%20good%20luck%20:%29).
 2. Train and improve model.
-3. Upload new model to s3.
-4. Create pr with new code pointing to new model location.
-5. Merge PR to main branch.
+3. Manual upload new model to s3.
+4. Create pr with new code pointing to new model location → triggers testing and model evaluation.
+5. Merge PR to main branch → triggers model deployment script.
 6. goto step 1.
 
 Lets go over these steps one by one:
@@ -88,9 +89,9 @@ def predict(tweet: str):
     }
 ```
 the method expects the tweet to be in a query string, so sending "I have really good luck :)" looks like: 
-[http://sentiment-env.eba-pcptvp7e.us-west-2.elasticbeanstalk.com/predict?tweet=i%20have%20really%20good%20luck%20:%29](http://sentiment-env.eba-pcptvp7e.us-west-2.elasticbeanstalk.com/predict?tweet=i%20have%20really%20good%20luck%20:%29).  
+[http://sentiment-env.eba-pcptvp7e.us-west-2.elasticbeanstalk.com/predict?tweet=i%20have%20really%20good%20luck%20:%29](http://sentiment-env.eba-pcptvp7e.us-west-2.elasticbeanstalk.com/predict?tweet=i%20have%20really%20good%20luck%20:%29). FastAPI adds a nice docs page you can also play with the API [here](http://sentiment-env.eba-pcptvp7e.us-west-2.elasticbeanstalk.com/docs#/default/predict_predict_get).
 
-For serving I am using AWS Elastic Beanstalk, an easy-to-use service for deploying and scaling web applications. There are several methods to deploy on elasticbeanstalk but I find using a [Dockerfile](https://github.com/yonigottesman/sentiment/blob/main/Dockerfile) the easiest. Deploying using docker is super easy using the [eb-cli](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/docker.html). From the root directory run:
+For serving I am using AWS Elastic Beanstalk, an easy-to-use service for deploying and scaling web applications. There are several methods to deploy on Elastic Beanstalk but I find using a [Dockerfile](https://github.com/yonigottesman/sentiment/blob/main/Dockerfile) the easiest. Deploying using docker is super easy using the [eb-cli](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/docker.html). From the root directory run:
 ```shell
 eb init -p docker sentiment
 eb create sentiment-env
