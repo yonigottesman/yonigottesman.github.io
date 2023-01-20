@@ -66,8 +66,7 @@ After this short introduction to ECG, it's time to train our model :robot:
 Data
 ----
 I'm going to use [this dataset](https://www.physionet.org/content/ecg-arrhythmia/1.0.0/) which contains 45152 12 lead ECGs. Each ECG comes with a list of labels described [here](https://www.physionet.org/content/ecg-arrhythmia/1.0.0/ConditionNames_SNOMED-CT.csv). The file contains descriptions of many conditions, but I am only interested in two: LVH and TWO (T-Wave Opposite).  
-The first step is to parse the files in the dataset and create a dataframe representing the training data. [This function](https://github.com/yonigottesman/ecg_vit/blob/main/data.py#L38) parses all the files, looks for the LVH and TWO labels and builds the dataframe. To simplify, I take all the LVH/TWO ECGs and sample only 20000 negative ECGs. Finally, I split the data to train/test using a hash function on the filename. The resulting dataframe:  
-The "y" column is a hot encoding of LVH and TWO.
+The first step is to parse the files in the dataset and create a dataframe representing the training data. [This function](https://github.com/yonigottesman/ecg_vit/blob/main/data.py#L38) parses all the files, looks for the LVH and TWO, labels, and builds the dataframe. To simplify, I take all the LVH/TWO ECGs and sample only 20000 negative ECGs. Finally, I split the data to train/test using a hash function on the filename. The resulting dataframe contains the `file` path, `y` label, which is the hot encoding of LVH and TWO, and `test`, which indicates validation data:
 
 | file                                   | y       | test   |
 |:---------------------------------------|:--------|:-------|
@@ -338,8 +337,7 @@ print(attn.shape)
 > (5000, 6)
 ~~~
 
-
-That's it! I now have to plot an ECG lead and display the scores on top of it. Using `cmap=Reds` colors high scores in darker red, and here are plots of scores from different attention heads:  
+That's it! I can now plot an ECG lead and display the scores on top of it. In pyplot, I use `cmap=Reds` so that it colors high scores in darker red, and here are plots of scores from different attention heads:  
 [![]({{ "/assets/ecgvit/attn_4.png" | absolute_url }})](/assets/ecgvit/attn_4.png)
 [![]({{ "/assets/ecgvit/attn_2.png" | absolute_url }})](/assets/ecgvit/attn_2.png)
 
@@ -350,7 +348,7 @@ It's also interesting to see the second head paying the most attention to the tw
 ----
 <br>
      
-That it! Not only can I use the model for ECG classification, but I can also explain what parts of the ECG the model pays attention to.
+Thats it! Not only can I use the model for ECG classification, but I can also explain what parts of the ECG the model pays attention to.
 
 
 
