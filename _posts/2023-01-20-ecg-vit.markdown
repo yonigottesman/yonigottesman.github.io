@@ -186,7 +186,7 @@ class MLP(tf.keras.layers.Layer):
 The main encoder block. Normalization layers, attention layer, and MLP are all connected with skip connections with a stochastic depth layer.
 Each block has an additional function, `get_attention_scores`, that isn't called during training. `get_attention_scores` is used only to get the attention weights from the attention layer, and I will use it later for interpretability.  
 ~~~python
-lass Block(tf.keras.layers.Layer):
+class Block(tf.keras.layers.Layer):
     def __init__(
         self,
         num_heads,
