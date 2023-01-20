@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Interpretable ECG  Classification  With 1D Vision Transformer"
-excerpt: "Implement SimCLR on multiple gpus"
+excerpt: "Interpretable ECG  Classification  With 1D Vision Transformer"
 date:   2023-01-20 06:48:38 +0200
 categories: [ecg,vit,deep-learning]
 hide: false
@@ -230,7 +230,7 @@ lass Block(tf.keras.layers.Layer):
         _, weights = self.attn(x, x, training=False, return_attention_scores=True)
         return weights
 ~~~
-Finally, I tie everything together in the VisionTransformer mode:
+Finally, I tie everything together in the VisionTransformer model:
 ~~~python
 class VisionTransformer(tf.keras.Model):
     def __init__(
