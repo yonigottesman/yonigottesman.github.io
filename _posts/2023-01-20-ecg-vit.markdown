@@ -22,11 +22,11 @@ Electrocardiogram (ECG)
 An ECG is a noninvasive test that records the heart's electrical activity. This activity is the coordinated electrical impulses generated and transmitted throughout the heart's muscle tissue, causing it to contract and pump blood. The test is performed by attaching electrodes to the skin of the chest, arms, and legs. These electrodes measure the voltage amplitude and direction of the heart activity over time.  
 
 
-The following animation presents the heart's electrical activity and how an ECG records it. The red dots/lines are an electrical pulse initiating at the right atrium, causing it to contract and pump blood to the right ventricle. At the same time, the left atrium also contracts and pumps oxygen-rich blood to the left ventricle. The pulse then reaches the atrioventricular (AV) node between the atria and ventricles and is delayed before it is sent down into the ventricular muscle. This triggers the ventricles to contract and pump blood out to the body.  
+The following animation presents the heart's electrical activity and how an ECG records it. The red dots/lines are an electrical pulse initiating at the right atrium, causing it to contract and pump deoxygenated blood to the right ventricle. At the same time, the left atrium also contracts and pumps oxygen-rich blood to the left ventricle. The electrical pulse then reaches the atrioventricular (AV) node between the atria and ventricles and is delayed before it is sent down into the ventricular muscle. This triggers the ventricles to contract and pump blood out to the body.  
 The blue recording at the bottom is the voltage recorded between two electrodes during the cardiac cycle.
 
 ![](https://upload.wikimedia.org/wikipedia/commons/0/0b/ECG_Principle_fast.gif "ecg-gif"){:height="50%" width="50%"}
-This is the recording of the voltage between only two electrodes, but to get a more detailed view of the heart's activity, we connect more electrodes and measure the voltage from 12 different positions. In my mind, I imagen 12 cameras recording the heart from 12 3D locations.
+This is the recording of the voltage between only two electrodes, but to get a more detailed view of the heart's activity, we attach more electrodes and measure the voltage from 12 different positions. In my mind, I imagen 12 cameras recording the heart from 12 3D locations.
 
 The following image illustrates the locations from which the 12 leads are recorded. The lead's names are I, II, III, aVR, aVL, v1, v2, v3, v4, v5, and v6.  
 ![](https://cdn.shopify.com/s/files/1/0059/3992/files/Image_5.png?v=1476239877 "12-lead"){:height="50%" width="50%"}
@@ -43,7 +43,7 @@ The cardiac cycle is the sequence of events that occur during one complete heart
 * The T-wave.
 * The PR Interval.
 * The ST segment.
-* The Qt interval.  
+* The QT interval.  
 
 The following image displays each component:
 ![](https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/SinusRhythmLabels.svg/1280px-SinusRhythmLabels.svg.png "pqrst"){:height="50%" width="50%"}
@@ -51,8 +51,10 @@ The following image displays each component:
 
 Left Ventricular Hypertrophy
 --
-Physicians use the ECG to diagnose various diseases, and during this post, I will focus on one in particular:  "Left Ventricular Hypertrophy" (LVH). LVH  is a condition where (as the name suggests :) ) there is hypertrophy of the left ventricle. Hypertrophy means a thickening of the heart muscle tissue, and Left Ventricular Hypertrophy means a thickening of the muscle tissue surrounding the left ventricle. 
-The following image on the right illustrates a heart suffering from LVH. The thickened heart tissue causes the ventricle to be smaller and less elastic, making it harder to pump blood to the rest of the body.
+Physicians use the ECG to diagnose various diseases, and during this post, I will focus on one in particular:  "Left Ventricular Hypertrophy" (LVH). LVH  is a condition where (as the name suggests :) ) there is hypertrophy of the left ventricle heart muscle. Hypertrophy means a thickening of muscle tissue, and Left Ventricular Hypertrophy means a thickening of the muscle tissue of the left ventricle. 
+The thickened heart tissue causes the ventricle lumen to be smaller and the left ventricular heart muscle to be less elastic, making it harder to pump blood to the rest of the body.
+
+
 
 ![](https://www.mayoclinic.org/-/media/kcms/gbs/patient-consumer/images/2013/08/26/11/03/ds00680-ans7_lvhthu_jpg.jpg "lvh"){:height="50%" width="50%"}
 
