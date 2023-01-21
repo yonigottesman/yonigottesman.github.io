@@ -14,7 +14,7 @@ hide: false
 </script>
 
 
-In this post, I will use a vision transformer (vit) to classify ECG signals and use the attention scores to interpret what part of the signal the model is focusing on. 
+In this post, I will use a vision transformer to classify ECG signals and use the attention scores to interpret what part of the signal the model is focusing on. 
 All the code to reproduce the results is in [my github](https://github.com/yonigottesman/ecg_vit).
 
 Electrocardiogram (ECG)
