@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Understand Diffusion Models with VAEs"
+title:  "YYYUnderstand Diffusion Models with VAEs"
 excerpt: "How DDPM is "
 date:   2023-03-11 00:00:00 +0000
 categories: []
