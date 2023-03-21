@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "YYYUnderstand Diffusion Models with VAEs"
+title:  "Understand Diffusion Models with VAEs"
 excerpt: "How DDPM is "
 date:   2023-03-11 00:00:00 +0000
 categories: []
@@ -55,7 +55,7 @@ Now we need to define $$p_\theta(x)$$. The probability of drawing an image $$x$$
 
 $$p_\theta(x) = \displaystyle \int_{z}p_\theta(z)p_\theta(x\vert z)dz$$  
 
-Let's think about what this means. To calculate the probability of a specific image of a cat $$p(x^{(i)})$$, we must go over all of $$z$$ and calculate the probability of generating $$x_i$$ given $$z$$.  
+Let's think about what this means. To calculate the probability of a specific image of a cat $$p(x^{(i)})$$, we must go over all of $$z$$ and calculate the probability of generating $$x^{(i)}$$ given $$z$$.  
 Of course, going over all possible values of $$z$$ is not something we can do, so we call $$p_\theta(x)$$  *intractable*, and this intractability is one of the central problems in bayesian statistics.  
 
 There are several approaches to solving this intractability, one of them is *variational inference*, and the intuition behind this approach is the following. For a specific image $$x^{(i)}$$, there is a tiny area in $$z$$ with a high probability of generating $$x^{(i)}$$. For all other $$z$$, the probability is close to 0. For example, think about the image of the black cat from above; there is probably a tiny region in $$z$$ that represents black cats with the head on the left side and two open eyes. The probability of generating this cat black from the area representing white cats is ~0.
@@ -85,16 +85,30 @@ Our juerney begins with the unknown posterior $$p_\theta(z\vert x)$$ and our est
 <div class="math-scroll">
 $$\begin{eqnarray} 
 D_{KL}[q_\phi(z\vert x)||p_\theta(z\vert x)] &=& \mathbb{E}_{z\sim q_\phi}[\log q_\phi(z\vert x)-\log p_\theta(z\vert x)]  \qquad      &;& (1) \\
-D_{KL}[q_\phi(z\vert x)||p_\theta(z\vert x)] &=& \mathbb{E}_{z\sim q_\phi}[\log q_\phi(z\vert x)-\log {p_\theta(x\vert z)p_\theta(z)\over \log p_\theta(x)}]  \\
-D_{KL}[q_\phi(z\vert x)||p_\theta(z\vert x)] &=& \mathbb{E}_{z\sim q_\phi}[\log q_\phi(z\vert x)-\log p_\theta(x\vert z)-\log p_\theta(z)-\log p_\theta(x)]   &;& \\
-D_{KL}[q_\phi(z\vert x)||p_\theta(z\vert x)] &=& \mathbb{E}_{z\sim q_\phi}[\log q_\phi(z\vert x)-\log p_\theta(x\vert z)-\log p_\theta(z)]-\log p_\theta(x)   &;&\text{log rules} \\
+D_{KL}[q_\phi(z\vert x)||p_\theta(z\vert x)] &=& \mathbb{E}_{z\sim q_\phi}[\log q_\phi(z\vert x)-\log {p_\theta(x\vert z)p_\theta(z)\over \log p_\theta(x)}]  &;& (2)\\
+D_{KL}[q_\phi(z\vert x)||p_\theta(z\vert x)] &=& \mathbb{E}_{z\sim q_\phi}[\log q_\phi(z\vert x)-\log p_\theta(x\vert z)-\log p_\theta(z)-\log p_\theta(x)]   &;& (3) \\
+D_{KL}[q_\phi(z\vert x)||p_\theta(z\vert x)] &=& \mathbb{E}_{z\sim q_\phi}[\log q_\phi(z\vert x)-\log p_\theta(x\vert z)-\log p_\theta(z)]-\log p_\theta(x)   &;& (4)\\
+D_{KL}[q_\phi(z\vert x)||p_\theta(z\vert x)]-\log p_\theta(x) &=& -\mathbb{E}_{z\sim q_\phi}[\log p_\theta(x\vert z)]+\mathbb{E}_{z\sim q_\phi}[\log q_\phi(z\vert x) -\log p_\theta(z)]   \\
+D_{KL}[q_\phi(z\vert x)||p_\theta(z\vert x)]-\log p_\theta(x) &=& -\mathbb{E}_{z\sim q_\phi}[\log p_\theta(x\vert z)]+D_{KL}[\log q_\phi(z\vert x) ||\log p_\theta(z)]   &;& (5)\\
+\\
+\log p_\theta(x)-D_{KL}[q_\phi(z\vert x)||p_\theta(z\vert x)] &=& \mathbb{E}_{z\sim q_\phi}[\log p_\theta(x\vert z)]-D_{KL}[\log q_\phi(z\vert x) ||\log p_\theta(z)]    &;& (6)\\\\
 \end{eqnarray}$$
 </div>
 
 1. Definition of KL-divergence.
+2. Bayes rule.
+3. Log rules.
+4. $$p_\theta(x)$$ does not depend on $$z$$ so can be taken out of $$\mathbb{E_z}$$
+5. Definition of KL-divergence.
 
+# Variational Lower Bound (ELBO)
+(6) can also be visualised like this
+![]({{ "/assets/vae/elbo.png" | absolute_url }}){:height="40%" width="100%"}  
 
+We want to maximize the likelihood of $$\log p_\theta(x)$$ (the evidence), which is intractable. $$D_{KL}[q_\phi(z\vert x)\vert\vert p_\theta(z\vert x)]$$ is also intractable and cannot be computed, but the evidence/variational lower bound is computable and can be maximized via gradient descent. By maximizing the lower bound we are also pushing $$\log p_\theta(x)$$ up, because $$D_{KL}[q_\phi(z\vert x)\vert\vert p_\theta(z\vert x)]$$ is always positive.   
+Ok, this is the "usual variational bound" the paper referred to. I will return to that later and show how the ddpm formula is the same as (6), but first, I will finish with the original VAE.
 
+# Optimizing ELBO
 
 <script src="https://utteranc.es/client.js"
         repo="yonigottesman/yonigottesman.github.io"
