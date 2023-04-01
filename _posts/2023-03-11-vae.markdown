@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Understand Diffusion Models with VAEs"
-excerpt: "In this post, I aim to provide a simplified understanding of diffusion models by drawing parallels with variational autoencoders (VAEs), which are also latent variable models. "
+excerpt: "In this post, I aim to provide a simplified understanding of diffusion models by drawing parallels with variational autoencoders (VAEs). "
 date:   2023-03-11 00:00:00 +0000
 categories: []
 hide: false
@@ -112,8 +112,9 @@ Ok, so this is the "usual variational bound" the paper referred to. I will retur
 # Optimizing ELBO
 Like always, instead of maximizing the ELBO term, we will minimize the -ELBO, so our loss function is  
 
+<div class="math-scroll">
 $$\mathcal{L}(\theta,\phi;\mathbf x^{(i)})= D_{KL}[q_\phi(\mathbf z\vert \mathbf x^{(i)}) \vert\vert p_\theta(\mathbf{z})]-\mathbb{E}_{z\sim q_\phi(\mathbf z\vert \mathbf x^{(i)})}[\log p_\theta(\mathbf x^{(i)}\vert \mathbf z)]$$
-
+</div>
 This is the loss of a single image $$x^{(i)}$$ from our dataset. Its not exactly clear how this formula becomes an explicit differentiable computation written in code, so lets break it into pieces.  
 First of all, the full schema of the VAE looks like:
 ![](https://upload.wikimedia.org/wikipedia/commons/1/11/Reparameterized_Variational_Autoencoder.png "vae"){:height="100%" width="100%"}
@@ -129,8 +130,9 @@ $$ \log q_\phi(\mathbf z\vert \mathbf x^{(i)})=\mathcal{N}(\mathbf z,\mu (\mathb
 
 $$\mu$$ and $$\sigma^2$$ are our two outputs from our deterministic neural net. In case $$q$$ and $$p$$ are Gaussians, $$D_{KL}[q_\phi(\mathbf z\vert \mathbf x^{(i)}) \vert\vert p_\theta(\mathbf{z})]$$ has an analyitical solution (appendix B in VAE paper):  
 
+<div class="math-scroll">
 $$D_{KL}[q_\phi(\mathbf z\vert \mathbf x^{(i)}) \vert\vert p_\theta(\mathbf{z})] = -{1 \over 2}\sum^{J}_{j=1}(1+\log((\sigma_j)^2)−(\mu_j )^2 − (\sigma_j )^2 )$$ 
-
+</div>
 So we can write the first term in the loss function as ($$J$$ is the dimension of $$z$$):
 ~~~python
 def kl_loss(mean, log_var):
