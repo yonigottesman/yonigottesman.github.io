@@ -34,6 +34,7 @@ We assume that every cat image was generated with these steps:
 2. Generate $$x^{(i)}$$ from the conditional distribution $$p_\theta(\mathbf{x}\vert \mathbf{z})$$
 
 I want to visualize this to give some better intuition:  
+
 ![]({{ "/assets/vae/latentcat.png" | absolute_url }}){:height="100%" width="100%"}  
 This process means that every cat image $$x^i$$ has a low dimensional representation $$z^i$$, and from $$z^i$$ we can generate the image by sampling $$p_\theta(\mathbf{x}\vert \mathbf{z})$$. The fact that every cat has a low-dimensional representation shouldn't surprise us; we usually see the opposite process when we use neural nets. For example, when we train a convnet, the convnet will learn to represent an image $$x^i$$ in a lower dimensional space $$z^i$$ and then pass $$z^i$$ through a classification layer.  
 
