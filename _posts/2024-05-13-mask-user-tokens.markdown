@@ -24,7 +24,7 @@ I want to fine-tune an LLM on the [Universal-NER/Pile-NER](https://huggingface.c
   {'from': 'gpt', 'value': '["Unity"]'}],
  'id': 'ner_4898'}
 ```
-As of May 2025, the most common way to fine-tune a conversational dataset is using `transformers`, `peft`, and `trl`. Huggingface added an abstraction called [chat_template](https://huggingface.co/docs/transformers/en/chat_templating) to format the conversation into a long string. Calling [apply_chat_template](https://huggingface.co/docs/transformers/en/main_classes/tokenizer#transformers.PreTrainedTokenizer.apply_chat_template) on the previous sample with the chatml format will create the following string:
+As of May 2024, the most common way to fine-tune a conversational dataset is using `transformers`, `peft`, and `trl`. Huggingface added an abstraction called [chat_template](https://huggingface.co/docs/transformers/en/chat_templating) to format the conversation into a long string. Calling [apply_chat_template](https://huggingface.co/docs/transformers/en/main_classes/tokenizer#transformers.PreTrainedTokenizer.apply_chat_template) on the previous sample with the chatml format will create the following string:
 
 ```
 <|im_start|>user
