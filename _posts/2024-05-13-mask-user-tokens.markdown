@@ -124,3 +124,12 @@ Also, never just use code on your data without really understanding what's going
 {% include note.html 
     content="There are training scripts that do mask the tokens as expected. Most notably, these include  [llama-recipes](https://github.com/meta-llama/llama-recipes/blob/main/recipes/finetuning/datasets/custom_dataset.py#L24) and [fastChat](https://github.com/lm-sys/FastChat/blob/922a78ba61c7def4682aa42c914adbdedbf3ac2f/fastchat/train/train.py#L125)"
 %}
+
+<script src="https://utteranc.es/client.js"
+        repo="yonigottesman/yonigottesman.github.io"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
