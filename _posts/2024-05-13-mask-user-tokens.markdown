@@ -7,7 +7,11 @@ categories: []
 hide: false
 ---
 
-These days, fine-tuning large language models (LLMs) seems to be getting easier and easier. Multiple frameworks and resources now allow you to plug in your dataset and start fine-tuning. It's not necessarily a bad thing that you can copy some code, swap in your dataset, fine-tune, and quickly create a model tailored to your needs. However, these default, one-click, or no-code approaches can sometimes obscure issues that might affect performance. My conclusion (OMG this is shocking): it's crucial to understand how these models work, and not just run a script from the internet, no matter how popular the repository it's taken from is.
+These days, fine-tuning large language models (LLMs) seems to be getting easier and easier. Multiple frameworks and resources now allow you to plug in your dataset and start fine-tuning. It's not necessarily a bad thing that you can copy some code, swap in your dataset, fine-tune, and quickly create a model tailored to your needs. However, these default, one-click, or no-code approaches can sometimes obscure issues that might affect performance. My conclusion (OMG this is shocking): it's crucial to understand how these models work, and not just run a script from the internet, no matter how popular the repository it's taken from is.  
+
+{% include note.html 
+    content="All the code for the experiments are in my [github](https://github.com/yonigottesman/broken_chat_formatting)"
+%}
 
 ## A Case Study
 I want to fine-tune an LLM on the [Universal-NER/Pile-NER](https://huggingface.co/datasets/Universal-NER/Pile-NER-type) dataset. This is a NER-like dataset for generative models where every sample is a "conversation" in which a "user" asks the "assistant" for relevant tokens in the text. Here is an example sample:
