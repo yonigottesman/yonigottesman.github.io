@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Mask Your User Tokens"
-excerpt: "While finetuning your llm on conversational datasets you should ignore the user tokens during backpropagation!"
+excerpt: "While finetuning your llm on conversational datasets you should ignore the user tokens!"
 date:   2024-05-13 00:00:00 +0000
 categories: []
 hide: false
