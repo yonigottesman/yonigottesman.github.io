@@ -121,3 +121,6 @@ Intuitivly it seems to better to mask user tokens, and the small experiments I h
 Also, never just use code on your data without really understanding what's going on under the hood. No-code training projects like [autotrain-advanced](https://github.com/huggingface/autotrain-advanced) are amazing, but performance might not be as good as if you implemented the training yourself. By the way, AutoTrain also uses [apply_chat_template](https://github.com/huggingface/autotrain-advanced/blob/9c2c7b56eb2704ac16f4923d723b89b7c5364238/src/autotrain/trainers/clm/utils.py#L213), so they also don't mask user tokens.
 
 
+{% include note.html 
+    content="There are training scripts that do mask the tokens as expected. Most notably, these include  [llama-recipes](https://github.com/meta-llama/llama-recipes/blob/main/recipes/finetuning/datasets/custom_dataset.py#L24) and [fastChat](https://github.com/lm-sys/FastChat/blob/922a78ba61c7def4682aa42c914adbdedbf3ac2f/fastchat/train/train.py#L125)"
+%}
