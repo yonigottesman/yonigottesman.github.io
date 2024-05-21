@@ -17,14 +17,17 @@ These days, fine-tuning large language models (LLMs) seems to be getting easier 
 I want to fine-tune an LLM on the [Universal-NER/Pile-NER](https://huggingface.co/datasets/Universal-NER/Pile-NER-type) dataset. This is a NER-like dataset for generative models where every sample is a "conversation" in which a "user" asks the "assistant" for relevant tokens in the text. Here is an example sample:
 
 ```
-{'conversations': [{'from': 'human',
-   'value': 'Text: Q:\n\nHow can I restore my Unity?'},
-  {'from': 'gpt', 'value': "I've read this text."},
-  {'from': 'human', 'value': 'What describes software in the text?'},
-  {'from': 'gpt', 'value': '["Unity"]'}],
- 'id': 'ner_4898'}
+{
+    "conversations": [
+        {"from": "human", "value": "Text: Q:\n\nHow can I restore my Unity?"},
+        {"from": "gpt", "value": "I've read this text."},
+        {"from": "human", "value": "What describes software in the text?"},
+        {"from": "gpt", "value": '["Unity"]'},
+    ],
+    "id": "ner_4898",
+}
 ```
-As of May 2024, the most common way to fine-tune a conversational dataset is using `transformers`, `peft`, and `trl`. Huggingface added an abstraction called [chat_template](https://huggingface.co/docs/transformers/en/chat_templating) to format the conversation into a long string. Calling [apply_chat_template](https://huggingface.co/docs/transformers/en/main_classes/tokenizer#transformers.PreTrainedTokenizer.apply_chat_template) on the previous sample with the chatml format will create the following string:
+As of May 2024, the most common way to fine-tune a conversational dataset is using `transformers`, `peft`, and `trl`. Huggingface added an abstraction called [chat_template](https://huggingface.co/docs/transformers/en/chat_templating) to format the conversation into a long string. Calling [apply_chat_template](https://huggingface.co/docs/transformers/en/main_classes/tokenizer#transformers.PreTrainedTokenizer.apply_chat_template) on the previous sample with the ChatML format will create the following string:
 
 ```
 <|im_start|>user
@@ -102,7 +105,7 @@ To validate my intuition, I finetuned both approaches and compared their perform
 
 
 {% include note.html 
-    content="huggingface has a collate function that masks instruction tokens from the dataset called [DataCollatorForCompletionOnlyLM]((https://github.com/huggingface/trl/blob/v0.8.6/trl/trainer/utils.py)). I didn’t use it because of performance issues; it searches the user and response strings during the training loop instead of computing it all in advance."
+    content="huggingface has a collate function that masks instruction tokens from the dataset called [DataCollatorForCompletionOnlyLM](https://github.com/huggingface/trl/blob/v0.8.6/trl/trainer/utils.py#L69). I didn’t use it because of performance issues; it searches the user and response strings during the training loop instead of computing it all in advance."
 %}
 
 ![]({{ "/assets/mask_user_tokens/loss.png" | absolute_url }})
@@ -115,7 +118,7 @@ For `Universal-NER`, it seems better to mask user tokens, but is this true for o
 Again, masking seems to produce better results, although the difference in this case is much smaller.
 
 ## Conclusion
-Intuitivly it seems to better to mask user tokens, and the small experiments I have done also support my intuition. The next steps is to do full training on these datasetes and evaluate using other metrics than `val_loss`.  
+Intuitivly it seems to be better to mask user tokens, and the small experiments I have done also support my intuition. The next steps is to do full training on these datasetes and evaluate using other metrics than `val_loss`.  
 
 
 Also, never just use code on your data without really understanding what's going on under the hood. No-code training projects like [autotrain-advanced](https://github.com/huggingface/autotrain-advanced) are amazing, but performance might not be as good as if you implemented the training yourself. By the way, AutoTrain also uses [apply_chat_template](https://github.com/huggingface/autotrain-advanced/blob/9c2c7b56eb2704ac16f4923d723b89b7c5364238/src/autotrain/trainers/clm/utils.py#L213), so they also don't mask user tokens.
