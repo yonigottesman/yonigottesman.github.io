@@ -1452,3 +1452,15 @@ These findings align with standard heart failure treatment guidelines, which typ
 </details>
 
 
+## Final Notes
+Implementing simple agents doesn't require you to use any fancy framework. Under the hood, these frameworks all have a simple `while True` loop wrapped with tons of abstractions. In this stage of the agentic era, I prefer to learn from these frameworks what kind of prompts they use and what best practices they employ to keep the short-term memory (message list) from exploding, rather than using them out of the box.
+
+
+<script src="https://utteranc.es/client.js"
+        repo="yonigottesman/yonigottesman.github.io"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
