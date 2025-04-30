@@ -38,7 +38,7 @@ minima:
     - title: GitHub
       icon: github
       url: "https://github.com/yonigottesman"
-
+  show_excerpts: true
 
 google_analytics:  G-H0P18BF8T9
 # Build settings
@@ -54,8 +54,8 @@ remote_theme: "jekyll/minima"
 
 include:
   - _pages
-minima:
-  show_excerpts: true
+
+
 
 
 # Exclude from processing.
