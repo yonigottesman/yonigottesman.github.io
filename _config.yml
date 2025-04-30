@@ -29,24 +29,34 @@ author:
   email: "yonigo10@gmail.com"
 
   
+# minima:
+#   social_links:
+#     - { platform: github,  user_url: "" }
+
 minima:
   social_links:
-    - { platform: github,  user_url: "https://github.com/yonigottesman" }
+    - title: GitHub
+      icon: github
+      url: "https://github.com/yonigottesman"
+
 
 google_analytics:  G-H0P18BF8T9
 # Build settings
-remote_theme: jekyll/minima
-# theme: minima
+
+#theme: minima
 plugins:
   - jekyll-feed
   - jekyll-remote-theme
   - jemoji
   - jekyll-sitemap
 
+remote_theme: "jekyll/minima"
+
 include:
   - _pages
+minima:
+  show_excerpts: true
 
-show_excerpts: true
 
 # Exclude from processing.
 # The following items will not be processed, by default.
