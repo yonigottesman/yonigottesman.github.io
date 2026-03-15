@@ -30,7 +30,19 @@ The problem I'm solving is of a physician asking questions on a patient with tho
 I don't have any real production traces of user queries, and there is no public dataset for what I'm looking for, so I need to create a synthetic dataset. The common approach is giving an LLM a document and asking it to generate questions. I'm using the [mimic-iii](https://physionet.org/content/mimiciii/1.4/) dataset for the notes and started with the [ViDoRe-V3](https://arxiv.org/abs/2601.08620) prompt for generating synthetic queries, iterating on patient documents and sending the doc + prompt to `gemini-3-flash` to generate physician queries.  
 The vanilla [prompt](https://arxiv.org/html/2601.08620v1#A11.F20) worked poorly. The generated queries were garbage and didn't look like what I wanted. I needed a way to quickly review the generated queries, so I asked Claude Code [CC] to create a [function](https://github.com/yonigottesman/visual-retrieval/blob/master/generate_queries.py#L333) that takes all the generated queries and creates a single-page HTML so I can review and save only relevant queries. Here is the [generated HTML](https://storage.googleapis.com/visual-retrieval/review_queries.html):
 
-<iframe src="https://storage.googleapis.com/visual-retrieval/review_queries.html" width="100%" height="600" style="border: 1px solid #ddd; border-radius: 4px;" title="Query review"></iframe>    
+<iframe id="review-iframe" data-src="https://storage.googleapis.com/visual-retrieval/review_queries.html" width="100%" height="600" style="border: 1px solid #ddd; border-radius: 4px;" title="Query review"></iframe>
+<script>
+(function() {
+  var iframe = document.getElementById('review-iframe');
+  var observer = new IntersectionObserver(function(entries) {
+    if (entries[0].isIntersecting) {
+      iframe.src = iframe.dataset.src;
+      observer.disconnect();
+    }
+  }, {rootMargin: '200px'});
+  observer.observe(iframe);
+})();
+</script>
 <br>
   
 At first I thought I would use this tool to manually pick only the best queries, but the initial ViDoRe prompt didn't produce any good ones. 
