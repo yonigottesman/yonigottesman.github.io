@@ -343,3 +343,14 @@ Decreased from 290- insulin 0.05units given.  Starting TPN and IL today.  Lytes 
 ## Final Thoughts
 Nemotron is a really good model (according to this modest benchmark), but before jumping to use it there are some things to consider. Late interaction models take `10x` more space in your search engine because we store an embedding per token. Also, it's a big model; 8B is not trivial and must run on a GPU.  
 I think the tiny `gemma` model has great results too. `Hit@10` is above 90% across all difficulties, which is great given I usually need just a single document that contains the answer. If I add BM25 text search and some query expansions done by an agent using retrieval as a tool, it might actually be very cost effective. A text model does require OCR, but I think OCR for plain text is essentially solved. Also, having a pipeline solution makes it easier to debug failures than a single end-to-end embedding model.
+
+
+
+<script src="https://utteranc.es/client.js"
+        repo="yonigottesman/yonigottesman.github.io"
+        issue-term="pathname"
+        label="comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
