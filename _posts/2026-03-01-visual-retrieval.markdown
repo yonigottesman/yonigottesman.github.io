@@ -319,7 +319,7 @@ initChart();
 Nemotron on scanned images is clearly the best across difficulties and most metrics. It's surprising (to me) to see **text** retrieval perform best when the text is actually represented as image pixels. 
 I created the [widget below](https://storage.googleapis.com/visual-retrieval/search.html?v=2) to show top-K results for all models and difficulties to easily debug errors.
 
-<iframe src="https://storage.googleapis.com/visual-retrieval/search.html?v=2" width="100%" height="600" style="border: 1px solid #ddd; border-radius: 4px;" title="top-k"></iframe>    
+<iframe src="https://storage.googleapis.com/visual-retrieval/search.html" width="100%" height="600" style="border: 1px solid #ddd; border-radius: 4px;" title="top-k"></iframe>    
 <br>
  
 Here are some interesting failing queries.  
