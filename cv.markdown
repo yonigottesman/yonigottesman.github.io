@@ -31,7 +31,7 @@ Technical lead across deep learning initiatives. Mentored team members and ran k
 
 ### IBM Research — Cloud Storage Group, Intern *(2015)*
 
-Researched storage class memories (SCM). Implemented a Redis clone using SCM to keep data persistent across failures. Presented at **SYSTOR**.
+Researched storage class memories (SCM). Implemented a Redis clone using SCM to keep data persistent across failures. Presented at [SYSTOR](https://dl.acm.org/doi/10.1145/2928275.2933273).
 
 -----
 
