@@ -37,7 +37,7 @@ Researched storage class memories (SCM). Implemented a Redis clone using SCM to 
 
 ### EZchip — Part-Time Software Developer *(2011 – 2014)*
 
-Developed the EZchip network processor emulator in C/C++ on Linux. Learned the EZchip processor architecture in depth.
+Developed the EZchip network processor emulator in C/C++ on Linux, gaining deep familiarity with the processor architecture and API as well as the full software stack — from embedded code and compilers to Linux device drivers.
 
 -----
 
