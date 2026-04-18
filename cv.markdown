@@ -1,10 +1,7 @@
 ---
 layout: page
-title: CV
 permalink: /cv/
 ---
-
-# Yoni Gottesman
 
 0544-946565 · yonigo10@gmail.com
 
