@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: bare
 permalink: /cv/
 ---
 
