@@ -40,6 +40,9 @@ minima:
       url: "https://github.com/yonigottesman"
   show_excerpts: true
 
+header_pages:
+  - "about copy.markdown"
+
 google_analytics:  G-H0P18BF8T9
 # Build settings
 
