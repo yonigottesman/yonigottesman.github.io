@@ -5,8 +5,6 @@ permalink: /cv/
 
 Technical AI/ML leader responsible for the strategy and technical work behind GenAI at Viz.ai. Experienced across machine learning, large-scale engineering, and distributed systems.
 
------
-
 ## Experience
 
 ### Viz.ai — 2022 – Present
