@@ -39,6 +39,8 @@ minima:
       icon: github
       url: "https://github.com/yonigottesman"
   show_excerpts: true
+  nav_pages:
+    - "about copy.markdown"
 
 header_pages:
   - "about copy.markdown"
