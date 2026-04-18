@@ -3,8 +3,6 @@ layout: page
 permalink: /cv/
 ---
 
-0544-946565 · yonigo10@gmail.com
-
 Technical AI/ML leader responsible for the strategy and technical work behind GenAI at Viz.ai. Experienced across machine learning, large-scale engineering, and distributed systems.
 
 -----
