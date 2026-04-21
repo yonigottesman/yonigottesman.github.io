@@ -26,7 +26,7 @@ Technical lead across deep learning initiatives. Mentored team members and ran k
 
 ### Yahoo Research — Sr. Research Engineer *(2016 – 2022)*
 
-- **Yahoo Mail** — Built a PyTorch-based classifier that labels e-commerce emails by product category, taken from prototype to production and integrated into downstream pipelines including ad ranking and user modeling. Also designed an ML pipeline extracting structured data from raw emails; modeling in TensorFlow, data processing and collection in Spark.
+- **Yahoo Mail** — Built PyTorch-based models that classify e-commerce emails by product category, taken from prototype to production and integrated into downstream pipelines including ad ranking and user modeling. Also designed an ML pipeline extracting structured data from raw emails; modeling in TensorFlow, data processing and collection in Spark.
 - **Distributed Systems** — Worked on [Omid](https://github.com/apache/phoenix-omid), a transactional layer over HBase. Implemented low-latency optimizations and integrated Omid into Apache Phoenix (became an Apache committer). Work published at [VLDB](https://www.vldb.org/pvldb/vol11/p1795-shacham.pdf).
 
 -----
