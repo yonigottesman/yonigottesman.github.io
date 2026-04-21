@@ -4,7 +4,7 @@ title: CV
 permalink: /cv/
 ---
 
-Head of GenAI. Machine learning expert with a strong engineering background. Successfully led ideas from scratch into revenue-generating products.
+Head of GenAI. Machine learning expert with a strong engineering background. Successfully led ideas into revenue-generating products.
 
 **Open Source Contributions** [Huggingface](https://github.com/huggingface/transformers/pulls?q=is%3Apr+is%3Aclosed+author%3Ayonigottesman), [Tensorflow](https://github.com/tensorflow/similarity/pulls?q=is%3Apr+author%3Ayonigottesman+is%3Aclosed), [Apache Phoenix-Omid](https://github.com/apache/phoenix-omid/pulls?q=is%3Apr+author%3Ayonigottesman+is%3Aclosed)
 
