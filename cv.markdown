@@ -17,7 +17,7 @@ Head of GenAI. Machine learning expert with a strong engineering background. Suc
 Led a personal side project from scratch into a commercial product that sparked [Viz.ai](https://www.viz.ai)’s strategic pivot to GenAI for physicians. Had a direct hand in defining the GenAI strategy, product, and direction, and led the technical execution and development.
 
 **AI Manager — Head of GenAI/NLP** *(2025 – Present)*
-Manage the team that builds and maintains Viz.ai’s NLP and GenAI capabilities, including retrieval systems and agent-based medical guidance products. Responsible for technical strategy and roadmap.
+I manage the team that builds and maintains Viz.ai’s NLP and GenAI capabilities, including retrieval systems and agent-based medical guidance products. Responsible for technical strategy and roadmap.
 
 **Principal AI Developer** *(2022 – 2025)*
 Technical lead across deep learning initiatives. Mentored team members and ran knowledge sharing sessions. Worked from research to production — trained and deployed deep learning and classical ML models across 1D ECG signals, NLP, and 2D/3D CT imaging.
